@@ -63,7 +63,6 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     if ((r<=Rvir_host) & (dfric==1)):
         if (ac == 1):
             print('No ac yet!')
-            ahalo = [0,0,0]
             #ahalo = acc_ac(x, y, z)
         else:
             if (host_model[0] == 'NFW'):
@@ -84,7 +83,7 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
         # Truncating the halo at r_vir:
         # Dynamical Friction inside the r_vir
-        a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[1], vxyz[0], vxyz[1], vxyz[2], M_host, M_sat, \
+        a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2], vxyz[0], vxyz[1], vxyz[2], M_host, M_sat, \
                               Rvir_host, c_host, host_model, M_disk, M_bulge, ac, alpha)
 
         Ax = ax + a_dfx
