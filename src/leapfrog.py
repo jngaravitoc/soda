@@ -4,14 +4,14 @@ from acceleration import *
 
 def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
              sat_model, disk_params, bulge_params, ac=0, \
-             dfric=1, alpha=0, host_move=1, direction=1):
+             dfric=1, alpha=0, host_move=1, direction=1, dt=0.01):
 
     """
     Orbit integrator:
 
     Input:
     ------
-    time: Gyrs.
+    time: Time of the integration in Gyrs
     pos_sat: array with the initial cartesian position of the satellite.
     vel_sat: array with the initial cartesian velocity of the satellite.
     pos_host: array with the initial cartesian position of the host.
@@ -21,11 +21,11 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     disk_params: array(Mass, a, b)
     bulge_params: array(Mass, r_s)
     ac (optional, default=0): No (0), Yes(1)
-    dfric: 0, 1
-    alpha: array(cl, alpha, L, C)
+    dfric: Include dynamica friction No(0), default Yes(1)
+    alpha: array(cl, alpha, L, C), cl=0 (), cl=1 (Van der Marel)
     host_move (optional, default=1): No(0), Yes(1)
     direction (optional, default=1): Forward -1, Backwards=1
-
+    dt: Time step for the integration (default dt=0.01 Gyrs)
     Output:
     ------
 
@@ -40,12 +40,13 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
 
     1. Generalize for N satellites.
     2. Integrate with galpy/gala
+    3. Used in arbitrary accelerations/SCF
     """
 
 
     # h is the time step
-    h = 0.01 * direction
-    n_points = int(time * 100.0) # Make this an input parameter!
+    h = dt * direction
+    n_points = int(time / dt) # Make this an input parameter!
 
     t = np.zeros(n_points)
     x = np.zeros(n_points)
@@ -167,11 +168,11 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
             az_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[2]
 
         ax[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
-                       , disk_params, bulge_params, ac, dfric, alpha)[0]
+                       ,disk_params, bulge_params, ac, dfric, alpha)[0]
         ay[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
-                       , disk_params, bulge_params, ac, dfric, alpha)[1]
+                       ,disk_params, bulge_params, ac, dfric, alpha)[1]
         az[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
-                       , disk_params, bulge_params, ac, dfric, alpha)[2]
+                       ,disk_params, bulge_params, ac, dfric, alpha)[2]
 
     return t, np.array([x, y, z]).T, np.array([vx, vy, vz]).T, \
            np.array([x_mw, y_mw, z_mw]).T, np.array([vx_mw, vy_mw, vz_mw]).T

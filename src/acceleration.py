@@ -19,7 +19,7 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
             bulge_params, ac, dfric, alpha=False):
     """
     Function that computes the satellite acceleration
-    due to its host galaxy.
+    due to it's host galaxy.
 
     Input:
     ------
@@ -50,11 +50,8 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
     # Host & Satellite models & parameters
     M_host = host_model[1]
-    Rvir_host = host_model[2]
-    c_host = host_model[3]
-
     M_sat = sat_model[1]
-
+    Rvir_host = host_model[2]
     # Disk and bulge parameters
     M_disk, a_disk, b_disk = disk_params
     M_bulge, rh = bulge_params
@@ -68,11 +65,13 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
             if (host_model[0] == 'NFW'):
                 Rvir_host = host_model[2]
                 c_host = host_model[3]
-                ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2], M_host, Rvir_host)
+                ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2],\
+                                   M_host, Rvir_host)
 
             elif (host_model[0] == 'hernquist'):
                 rs_host = host_model[2]
-                ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2], M_host)
+                ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
+                                    M_host)
 
         adisk = a_mn(a_disk, b_disk, xyz[0], xyz[1], xyz[2], M_disk)
         abulge = a_hernquist(rh, xyz[0], xyz[1], xyz[2], M_bulge)
@@ -83,24 +82,25 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
         # Truncating the halo at r_vir:
         # Dynamical Friction inside the r_vir
-        a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2], vxyz[0], vxyz[1], vxyz[2], M_host, M_sat, \
-                              Rvir_host, c_host, host_model, M_disk, M_bulge, ac, alpha)
-
+        a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2], vxyz[0], vxyz[1], \
+                                 xyz[2], M_host, M_sat, Rvir_host, c_host, \
+                                 host_model, M_disk, M_bulge, ac, alpha)
         Ax = ax + a_dfx
         Ay = ay + a_dfy
         Az = az + a_dfz
-    # Point like acceleration beyond r_vir
+
+    #Point like acceleration beyond r_vir
     else:
         Mtot = (M_host + M_disk + M_bulge) * units.Msun
         Ax = - G * Mtot * xyz[0] * units.kpc / (r*units.kpc)**3
         Ay = - G * Mtot * xyz[1] * units.kpc / (r*units.kpc)**3
         Az = - G * Mtot * xyz[2] * units.kpc / (r*units.kpc)**3
-        Ax = Ax.to(units.kpc / units.Gyr**2)
-        Ay = Ay.to(units.kpc / units.Gyr**2)
-        Az = Az.to(units.kpc / units.Gyr**2)
-        Ax = Ax.value
-        Ay = Ay.value
-        Az = Az.value
+        Ax = Ax.to(units.kpc / units.Gyr**2).value
+        Ay = Ay.to(units.kpc / units.Gyr**2).value
+        Az = Az.to(units.kpc / units.Gyr**2).value
+        #x = Ax.value
+        #Ay = Ay.value
+        #Az = Az.value
     return Ax, Ay, Az
 
 def acc_host(xyz, vxyz, host_model, sat_model):
@@ -139,9 +139,9 @@ def acc_host(xyz, vxyz, host_model, sat_model):
         c_sat = sat_model[3]
 
     elif (sat_model[0] == 'hernquist'):
-        A_host = a_hernquist(rs_sat, xyz[0], xyz[1], xyz[2], M_sat)
         M_sat = sat_model[1]
         rs_sat = sat_model[2]
+        A_host = a_hernquist(rs_sat, xyz[0], xyz[1], xyz[2], M_sat)
 
     elif (sat_model[0] == 'plummer'):
         M_sat = sat_model[1]
