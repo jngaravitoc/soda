@@ -141,6 +141,7 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     az[1] = acc_sat(pos_1, vel_1, host_model, sat_model\
                    ,disk_params, bulge_params, ac, dfric, alpha)[2]
 
+
     for i in range(2, len(x)):
         t[i] = t[i-1] - h
         x[i] = x[i-2] - 2 * h * vx[i-1]
