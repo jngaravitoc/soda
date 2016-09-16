@@ -9,9 +9,6 @@ TO-DO:
 
 import numpy as np
 from astropy import units, constants
-from profiles import *
-from dynamical_friction import *
-#from adiabatic_contraction import *
 
 
 #Function that computes the satellite acceleration

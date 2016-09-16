@@ -1,6 +1,5 @@
 import numpy as np
 from astropy import units, constants
-from acceleration import *
 
 def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
              sat_model, disk_params, bulge_params, ac=0, \

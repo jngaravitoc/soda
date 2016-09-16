@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.special import erf
 from astropy import units, constants
-from profiles import *
 #from adiabatic_contraction import rho_ac
 
 # Coulomb Logarithm definition:
