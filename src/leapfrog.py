@@ -133,6 +133,9 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
         vy_mw[1] = vy_mw[0] - h * ay_mw[0]
         vz_mw[1] = vz_mw[0] - h * az_mw[0]
 
+        pos_1 = np.array([x[1]-x_mw[1], y[1]-y_mw[1], z[1]-z_mw[1]])
+        vel_1 = np.array([vx[1]-vx_mw[1], vy[1]-vy_mw[1], vz[1]-vz_mw[1]])
+
         ax_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[0]
         ay_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[1]
         az_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[2]
@@ -168,6 +171,9 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
             vx_mw[i] = vx_mw[i-2] - 2 * h * ax_mw[i-1]
             vy_mw[i] = vy_mw[i-2] - 2 * h * ay_mw[i-1]
             vz_mw[i] = vz_mw[i-2] - 2 * h * az_mw[i-1]
+
+            pos_i = np.array([x[i]-x_mw[i], y[i]-y_mw[i], z[i]-z_mw[i]])
+            vel_i = np.array([vx[i]-vx_mw[i], vy[i]-vy_mw[i], vz[i]-vz_mw[i]])
 
             ax_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[0]
             ay_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[1]
