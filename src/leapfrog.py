@@ -21,7 +21,7 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     disk_params: array(Mass, a, b)
     bulge_params: array(Mass, r_s)
     ac (optional, default=0): No (0), Yes(1)
-    dfric: Include dynamica friction No(0), default Yes(1)
+    dfric: Include dynamical friction No(0), default Yes(1)
     alpha: array(cl, alpha, L, C), cl=0 (), cl=1 (Van der Marel)
     host_move (optional, default=1): No(0), Yes(1)
     direction (optional, default=1): Forward -1, Backwards=1
@@ -43,7 +43,7 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     3. Used in arbitrary accelerations/SCF
     """
 
-
+    conv_factor = 1.0227121650537077
     # h is the time step
     h = dt * direction
     n_points = int(time / dt) # Make this an input parameter!
@@ -82,13 +82,13 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     y_mw[0] = pos_host[1]
     z_mw[0] = pos_host[2]
 
-    vx[0] = vel_sat[0]
-    vy[0] = vel_sat[1]
-    vz[0] = vel_sat[2]
+    vx[0] = vel_sat[0]*conv_factor
+    vy[0] = vel_sat[1]*conv_factor
+    vz[0] = vel_sat[2]*conv_factor
 
-    vx_mw[0] = vel_host[0]
-    vy_mw[0] = vel_host[1]
-    vz_mw[0] = vel_host[2]
+    vx_mw[0] = vel_host[0]*conv_factor
+    vy_mw[0] = vel_host[1]*conv_factor
+    vz_mw[0] = vel_host[2]*conv_factor
 
     pos_0 = np.array([x[0]-x_mw[0], y[0]-y_mw[0], z[0]-z_mw[0]])
     vel_0 = np.array([vx[0]-vx_mw[0], vy[0]-vy_mw[0], vz[0]-vz_mw[0]])
@@ -108,6 +108,9 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
 
     # half step
     # Here I assume the host galaxy starts at position (0, 0, 0) and then its
+    #print(ax[0], ay[0], az[0], ax_mw[0], ay_mw[0], az_mw[0])
+    #print(vx[0], vy[0], vz[0], vx_mw[0], vy_mw[0], vz_mw[0])
+
     # initial v[1] is (0, 0, 0)
     t[1] = t[0] - h
     x[1] = x[0] - h * vx[0]
@@ -141,6 +144,8 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     az[1] = acc_sat(pos_1, vel_1, host_model, sat_model\
                    ,disk_params, bulge_params, ac, dfric, alpha)[2]
 
+    #print(ax[1], ay[1], az[1], ax_mw[1], ay_mw[1], az_mw[1])
+    #print(vx[1], vy[1], vz[1], vx_mw[1], vy_mw[1], vz_mw[1])
 
     for i in range(2, len(x)):
         t[i] = t[i-1] - h
