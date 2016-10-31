@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import interpolate
-from profiles import *
 from astropy import units, constants
 
 
