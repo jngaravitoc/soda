@@ -9,7 +9,8 @@ TO-DO:
 
 import numpy as np
 from astropy import units, constants
-
+from .profiles import *
+from .dynamical_friction import *
 
 #Function that computes the satellite acceleration
 def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
@@ -22,7 +23,7 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     ------
     xyz:
     vxyz:
-    host_model:
+    host_model: ['halo model', Mhost, Rvir/a, c]
     sat_model:
     disk_params:
     bulge_params:
@@ -79,6 +80,7 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
         # Truncating the halo at r_vir:
         # Dynamical Friction inside the r_vir
+        c_host = host_model[3]
         a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2], vxyz[0], vxyz[1], \
                                  xyz[2], M_host, M_sat, Rvir_host, c_host, \
                                  host_model, M_disk, M_bulge, ac, alpha)

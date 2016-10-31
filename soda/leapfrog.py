@@ -1,5 +1,7 @@
 import numpy as np
 from astropy import units, constants
+from .acceleration import *
+from .dynamical_friction import *
 
 def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
              sat_model, disk_params, bulge_params, ac=0, \
@@ -77,19 +79,30 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     az_mw  = np.zeros(n_points)
 
     t[0] = 0 # Make this an input parameter?
-    x[0] = pos_sat[0]
-    y[0] = pos_sat[1]
-    z[0] = pos_sat[2]
+
+
+    if ((pos_sat == 'LMC') & (vel_sat== 'LMC')):
+        x[0] = lmc_pos[0]
+        y[0] = lmc_pos[1]
+        z[0] = lmc_pos[2]
+        vx[0] = lmc_vel[0]*conv_factor
+        vy[0] = lmc_vel[1]*conv_factor
+        vz[0] = lmc_vel[2]*conv_factor
+
+    else:
+        x[0] = pos_sat[0]
+        y[0] = pos_sat[1]
+        z[0] = pos_sat[2]
+        vx[0] = vel_sat[0]*conv_factor
+        vy[0] = vel_sat[1]*conv_factor
+        vz[0] = vel_sat[2]*conv_factor
 
     x_mw[0] = pos_host[0]
     y_mw[0] = pos_host[1]
     z_mw[0] = pos_host[2]
 
-    vx[0] = vel_sat[0]*conv_factor
-    vy[0] = vel_sat[1]*conv_factor
-    vz[0] = vel_sat[2]*conv_factor
 
-    if sat_pos == 'LMC':
+    if ((pos_sat == 'LMC') & (vel_sat== 'LMC')):
          x[0] = lmc_pos[0]
          y[0] = lmc_pos[1]
          z[0] = lmc_pos[2]

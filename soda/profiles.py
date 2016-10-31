@@ -13,7 +13,7 @@ acceleration = [kpc/Gyr2]
 import numpy as np
 from astropy import constants
 from astropy import units
-#from cosmotools import *
+from .cosmotools import *
 
 
 K = constants.k_B

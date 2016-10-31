@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import erf
 from astropy import units, constants
+from .profiles import *
 #from adiabatic_contraction import rho_ac
 
 # Coulomb Logarithm definition:
@@ -65,7 +66,7 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
         rho = dens_NFWnRvir(c, x, y, z, M1, Rv)
 
     elif ((host_model[0] == 'hernquist') & (ac==0)):
-        rho = dens_hernquist(rs_host, x, y, z, M1)
+        rho = dens_hernquist(Rv, x, y, z, M1) # Rv is a in this case
 
     rho = rho * units.Msun / units.kpc**3.0
 
@@ -87,8 +88,10 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
          C = alpha[3]
          Coulomb = coulomb_v_log(L, r, alpha[1], rs_sat ,C)
 
-    s = sigma(c, r, M1.value - M_disk - M_bulge, Rv)
-
+    if host_model[0]=='hernquist':
+        s = sigma(c, r, M1.value - M_disk - M_bulge, Rv*c)
+    else:
+        s = sigma(c, r, M1.value - M_disk - M_bulge, Rv)
     X = v/(np.sqrt(2.0)*s)
 
     # Dynamical friction equation
