@@ -41,6 +41,10 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     2. Integrate with galpy/gala
     3. Used in arbitrary accelerations/SCF
     """
+    lmc_pos = np.array([-1, -41, -28])
+    lmc_vel = np.array([-57, -226, 221])
+
+
 
     conv_factor = 1.0227121650537077
     # h is the time step
@@ -84,6 +88,14 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     vx[0] = vel_sat[0]*conv_factor
     vy[0] = vel_sat[1]*conv_factor
     vz[0] = vel_sat[2]*conv_factor
+
+    if sat_pos == 'LMC':
+         x[0] = lmc_pos[0]
+         y[0] = lmc_pos[1]
+         z[0] = lmc_pos[2]
+         vx[0] = lmc_vel[0]
+         vy[0] = lmc_vel[1]
+         vz[0] = lmc_vel[2]
 
     vx_mw[0] = vel_host[0]*conv_factor
     vy_mw[0] = vel_host[1]*conv_factor
