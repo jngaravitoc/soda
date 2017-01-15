@@ -16,6 +16,8 @@ from astropy import units
 from .cosmotools import *
 
 
+# G is defined in cosmotools in units of kpc^2/Msun/s^2
+
 K = constants.k_B
 K = K.to(units.Msun * units.kpc**2 / (units.s**2 * units.Kelvin))
 

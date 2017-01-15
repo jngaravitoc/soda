@@ -12,6 +12,17 @@ from astropy import units, constants
 from .profiles import *
 from .dynamical_friction import *
 
+
+
+def particle_acceleration(Mtot, xyz, r):
+        Ax = - G * Mtot * xyz[0] * units.kpc / (r*units.kpc)**3
+        Ay = - G * Mtot * xyz[1] * units.kpc / (r*units.kpc)**3
+        Az = - G * Mtot * xyz[2] * units.kpc / (r*units.kpc)**3
+        Ax = Ax.to(units.kpc / units.Gyr**2).value
+        Ay = Ay.to(units.kpc / units.Gyr**2).value
+        Az = Az.to(units.kpc / units.Gyr**2).value
+        return Ax, Ay, Az
+
 #Function that computes the satellite acceleration
 def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
             bulge_params, ac, dfric, alpha=False):
@@ -49,10 +60,14 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     # Host & Satellite models & parameters
     M_host = host_model[1]
     M_sat = sat_model[1]
-    Rvir_host = host_model[2]
+
+    # This is not the case for the herquist profile
+    Rvir_host = host_model[2] # *************************
+
     # Disk and bulge parameters
     M_disk, a_disk, b_disk = disk_params
     M_bulge, rh = bulge_params
+
     # Acceleration by the DM halo profile
 
     if ((r<=Rvir_host) & (dfric==1)):
@@ -74,33 +89,27 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
         adisk = a_mn(a_disk, b_disk, xyz[0], xyz[1], xyz[2], M_disk)
         abulge = a_hernquist(rh, xyz[0], xyz[1], xyz[2], M_bulge)
 
-        ax = ahalo[0] + adisk[0] + abulge[0]
-        ay = ahalo[1] + adisk[1] + abulge[1]
-        az = ahalo[2] + adisk[2] + abulge[2]
+        Ax = ahalo[0] + adisk[0] + abulge[0]
+        Ay = ahalo[1] + adisk[1] + abulge[1]
+        Az = ahalo[2] + adisk[2] + abulge[2]
 
-        # Truncating the halo at r_vir:
-        # Dynamical Friction inside the r_vir
-        c_host = host_model[3]
-        a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2], vxyz[0], vxyz[1], \
-                                 xyz[2], M_host, M_sat, Rvir_host, c_host, \
-                                 host_model, M_disk, M_bulge, ac, alpha)
-        Ax = ax + a_dfx
-        Ay = ay + a_dfy
-        Az = az + a_dfz
+        #  generalize this to a Hernquist halo as well.
+        if dfric==1:
+            c_host = host_model[3]
+            a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2], vxyz[0], vxyz[1], \
+                                     xyz[2], M_host, M_sat, Rvir_host, c_host, \
+                                     host_model, M_disk, M_bulge, ac, alpha)
+            Ax += a_dfx
+            Ay += a_dfy
+            Az += a_dfz
 
     #Point like acceleration beyond r_vir
     else:
-        Mtot = (M_host + M_disk + M_bulge) * units.Msun
-        Ax = - G * Mtot * xyz[0] * units.kpc / (r*units.kpc)**3
-        Ay = - G * Mtot * xyz[1] * units.kpc / (r*units.kpc)**3
-        Az = - G * Mtot * xyz[2] * units.kpc / (r*units.kpc)**3
-        Ax = Ax.to(units.kpc / units.Gyr**2).value
-        Ay = Ay.to(units.kpc / units.Gyr**2).value
-        Az = Az.to(units.kpc / units.Gyr**2).value
-        #x = Ax.value
-        #Ay = Ay.value
-        #Az = Az.value
+        Ax, Ay, Az = particle_acceleration((M_host + M_disk + \
+                                           M_bulge)*units.Msun, xyz, r)
+
     return Ax, Ay, Az
+
 
 def acc_host(xyz, vxyz, host_model, sat_model):
 
@@ -132,10 +141,11 @@ def acc_host(xyz, vxyz, host_model, sat_model):
     M_sat = sat_model[1]
 
     if (sat_model[0] == 'NFW'):
-        A_host = a_NFWnRvir(c_sat, xyz[0], xyz[1], xyz[2], M_sat, Rvir_sat)
+        c_sat = sat_model[3]
         M_sat = sat_model[1]
         Rvir_sat = sat_model[2]
-        c_sat = sat_model[3]
+        A_host = a_NFWnRvir(c_sat, xyz[0], xyz[1], xyz[2], M_sat, Rvir_sat)
+        #c_sat = sat_model[3]
 
     elif (sat_model[0] == 'hernquist'):
         M_sat = sat_model[1]

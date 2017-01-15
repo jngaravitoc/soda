@@ -33,9 +33,6 @@ for i in range(1,len(rho_grid)):
     pot_ac[i] = pot_ac[i-1] + dr*dpot[i-1]
     dpot[i] = dpot[i-1] + dr*(4.*np.pi*G.value*rho_grid[i] - 2./r_grid[i]*dpot[i-1])
 
-#for i in range(len(rho_grid)):
-#   print r_grid[i], pot_ac[i], rho_grid[i], dpot[i]
-
 
 def rho_ac(r):
     index = np.where(np.abs(r-r_grid) == min(np.abs(r-r_grid)))[0]
@@ -44,7 +41,7 @@ def rho_ac(r):
         return 0
     else:
     #rho = f1(r/Rvir_host)
-    	return rho_grid[index]#_grid[index]
+        return rho_grid[index]#_grid[index]
 
 def acc_ac(x, y, z):
     """
@@ -78,31 +75,4 @@ def acc_ac(x, y, z):
     az = -d_pot2*z/r_eval#*np.cos(theta)
     #print az, a_NFWnRvir(9.86, x, y, z, M_host, Rvir_host)[2], r_eval
     return ax, ay, az
-
-"""
-if __name__ == "__main__":
-
-    g = constants.g
-    g = g.to(units.kpc**3/units.gyr**2.0/units.msun)
-
-    # reading contra output file
-    contra_out = np.loadtxt(contra_output)
-    r_f = contra_out[:,1] * rvir_host
-    rho_f = contra_out[:,5] * m_host / rvir_host**3.0
-    pot_i = -167300.72
-    dpot_i = 7807.67
-
-    f1 = interpolate.interp1d(r_f, rho_f)
-    r_grid = np.linspace(1, rvir_host, 1e6)
-    dr = r_grid[1] - r_grid[0]
-    rho_grid = f1(r_grid)
-    pot_ac = np.zeros(len(rho_grid))
-    dpot = np.zeros(len(rho_grid))
-    pot_ac[0] = pot_i
-    dpot[0] = dpot_i
-
-    for i in range(1,len(rho_grid)):
-        pot_ac[i] = pot_ac[i-1] + dr*dpot[i-1]
-        dpot[i] = dpot[i-1] + dr*(4.*np.pi*g.value*rho_grid[i] - 2./r_grid[i]*dpot[i-1])
-"""
 

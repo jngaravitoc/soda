@@ -5,7 +5,7 @@ from .dynamical_friction import *
 
 def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
              sat_model, disk_params, bulge_params, ac=0, \
-             dfric=1, alpha=0, host_move=1, direction=1, dt=0.01):
+             dfric=1, alpha=[0, 1], host_move=1, direction=1, dt=0.01):
 
     """
     Orbit integrator:
@@ -48,7 +48,7 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
 
 
 
-    conv_factor = 1.0227121650537077
+    conv_factor = 1.0227121650537077 # from km/s to Kpc/Gyr
     # h is the time step
     h = dt * direction
     n_points = int(time / dt) # Make this an input parameter!
@@ -148,7 +148,7 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     pos_1 = np.array([x[1]-x_mw[1], y[1]-y_mw[1], z[1]-z_mw[1]])
     vel_1 = np.array([vx[1]-vx_mw[1], vy[1]-vy_mw[1], vz[1]-vz_mw[1]])
 
-    if (host_move==1):#--------------------------------
+    if (host_move==1):
         x_mw[1] = x_mw[0] - h * vx_mw[0]
         y_mw[1] = y_mw[0] - h * vy_mw[0]
         z_mw[1] = z_mw[0] - h * vz_mw[0]
