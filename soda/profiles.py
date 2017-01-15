@@ -406,7 +406,7 @@ def a_log(Rc, q, z, R, v):
 
 #++++++++++++++++++++ Triaxial LMJ++++++++++++++++++++
 
-def constants(q1, q2, qz, phi):
+def constants_LMJ(q1, q2, qz, phi):
        C1 = (np.cos(phi)**2 / q1**2)  + (np.sin(phi)**2 / q2**2)
        C2 = (np.cos(phi)**2 / q2**2)  + (np.sin(phi)**2 / q1**2)
        C3 = 2*np.sin(phi)*np.cos(phi)*(1/q1**2 - 1/q2**2)
@@ -419,7 +419,7 @@ def pot_LMJ(r_h, q1, q2, qz, phi, x, y, z, v):
        y = y * units.kpc
        v = v * units.km / units.s
        v = v.to(units.kpc / units.s)
-       C1, C2, C3 = constants(q1, q2, qz, phi)
+       C1, C2, C3 = constants_LMJ(q1, q2, qz, phi)
        phi = v**2 * np.log(C1*x**2 + C2*y**2 + C3*x*y + (z/qz)**2 + r_h**2)
        return phi.value
 
@@ -430,7 +430,7 @@ def vc_LMJ(r_h, q1, q2, qz, phi, x, y, z, v):
        y = y * units.kpc
        v = v * units.km / units.s
        v = v.to(units.kpc / units.s)
-       C1, C2, C3 = constants(q1, q2, qz, phi)
+       C1, C2, C3 = constants_LMJ(q1, q2, qz, phi)
        factor = (C1*x**2 + C2*y**2 + C3*x*y + (z**2/qz**2 + r_h**2))
        r = np.sqrt(x**2 + y**2 + z**2)
        vc = v * np.sqrt(r*np.sqrt((2*C1*x + C3*y)**2 + (2*C2*y + C3*x)**2 + (2*z/qz**2)**2) / factor)
@@ -444,7 +444,7 @@ def a_LMJ(r_h, q1, q2, qz, phi, x, y, z, v):
        y = y * units.kpc
        v = v * units.km / units.s
        v = v.to(units*kpc / units.s)
-       C1, C2, C3 = constants(q1, q2, qz, phi)
+       C1, C2, C3 = constants_LMJ(q1, q2, qz, phi)
        factor = (C1*x**2 + C2*y**2 + C3*x*y + (z**2/qz**2 + r_h**2))
        ax = -v**2 * (2*C1*x + C3*y) / factor
        ay = -v**2 * (2*C2*y + C3*x) / factor
@@ -461,7 +461,7 @@ def mass_LMJ(r_h, q1, q2, qz, phi, x, y, z, v):
        y = y * units.kpc
        v = v * units.km / units.s
        v = v.to(units*kpc / units.s)
-       C1, C2, C3 = constants(q1, q2, qz, phi)
+       C1, C2, C3 = constants_LMJ(q1, q2, qz, phi)
        r = np.sqrt(x**2 + y**2 + z**2)
        factor1 = 2*C1*x + C3*y
        factor2 = 2*C2*y + C3*x
@@ -474,7 +474,7 @@ factor)
 #+++++++++++++++++++++++++Vera-Ciro-Helmi++++++++++++++++++++++++++++++++++++++++++++++
 
 def pot_VCH(d, q1, q2, q3, qz, phi, ra, x, y, z, v):
-    c1, c2, c3 = constants(q1, q2, q3, phi)
+    c1, c2, c3 = constants_LMJ(q1, q2, q3, phi)
     rA = np.sqrt(x**2 + y**2 + z**2/qz**2)
     rT = np.sqrt(c1*x**2 + c2*y**2 + c3*x*y + z**2/q3**2)
     r = (ra + rT)*rA / (ra + rA)
