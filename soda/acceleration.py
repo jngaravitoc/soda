@@ -13,15 +13,70 @@ from .profiles import *
 from .dynamical_friction import *
 
 
+def particle_acceleartion_LMC(M_LMC, xyz_LMC, xyz_MW, host_model, \
+                              disk_params, bulge_params, ac):
+
+    """
+    Acceleration of a particle in the presence of the LMC,
+    this neglects the extended nature of the LMC, i.e the
+    particle always feels the LMC potential as that of a
+    point-like potential.
+
+    """
+
+    r_to_LMC = np.sqrt(xyz_LMC[0]**2.0 + xyz_LMC[1]**2.0 + xyz_LMC[2]**2.0)
+    Ax_LMC, Ay_LMC, Az_LMC = particle_acceleration(M_LMC, xyz, r_to_LMC)
+    Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac)
+
+    return Ax_LMC + Ax_MW, Ay_LMC + Ay_MW, Az_LMC + Az_MW
+
+
 
 def particle_acceleration(Mtot, xyz, r):
-        Ax = - G * Mtot * xyz[0] * units.kpc / (r*units.kpc)**3
-        Ay = - G * Mtot * xyz[1] * units.kpc / (r*units.kpc)**3
-        Az = - G * Mtot * xyz[2] * units.kpc / (r*units.kpc)**3
-        Ax = Ax.to(units.kpc / units.Gyr**2).value
-        Ay = Ay.to(units.kpc / units.Gyr**2).value
-        Az = Az.to(units.kpc / units.Gyr**2).value
-        return Ax, Ay, Az
+    """
+    Newtonian acceleration between two bodies.
+
+    """
+    Ax = - G * Mtot * xyz[0] * units.kpc / (r*units.kpc)**3
+    Ay = - G * Mtot * xyz[1] * units.kpc / (r*units.kpc)**3
+    Az = - G * Mtot * xyz[2] * units.kpc / (r*units.kpc)**3
+    Ax = Ax.to(units.kpc / units.Gyr**2).value
+    Ay = Ay.to(units.kpc / units.Gyr**2).value
+    Az = Az.to(units.kpc / units.Gyr**2).value
+
+    return Ax, Ay, Az
+
+
+def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac):
+    """
+    Computes the acceleration of a particle inside a given MW model.
+    """
+
+    M_disk, a_disk, b_disk = disk_params
+    M_bulge, rh = bulge_params
+
+    if (ac == 1):
+       print('No ac yet!')
+       #ahalo = acc_ac(x, y, z)
+    else:
+        if (host_model[0] == 'NFW'):
+            Rvir_host = host_model[2]
+            c_host = host_model[3]
+            ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2],\
+                               M_host, Rvir_host)
+         elif (host_model[0] == 'hernquist'):
+            rs_host = host_model[2]
+            ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
+                                M_host)
+
+    adisk = a_mn(a_disk, b_disk, xyz[0], xyz[1], xyz[2], M_disk)
+    abulge = a_hernquist(rh, xyz[0], xyz[1], xyz[2], M_bulge)
+
+    Ax = ahalo[0] + adisk[0] + abulge[0]
+    Ay = ahalo[1] + adisk[1] + abulge[1]
+    Az = ahalo[2] + adisk[2] + abulge[2]
+
+    return Ax, Ay, Az
 
 #Function that computes the satellite acceleration
 def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
@@ -71,27 +126,8 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     # Acceleration by the DM halo profile
 
     if ((r<=Rvir_host) & (dfric==1)):
-        if (ac == 1):
-            print('No ac yet!')
-            #ahalo = acc_ac(x, y, z)
-        else:
-            if (host_model[0] == 'NFW'):
-                Rvir_host = host_model[2]
-                c_host = host_model[3]
-                ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2],\
-                                   M_host, Rvir_host)
 
-            elif (host_model[0] == 'hernquist'):
-                rs_host = host_model[2]
-                ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
-                                    M_host)
-
-        adisk = a_mn(a_disk, b_disk, xyz[0], xyz[1], xyz[2], M_disk)
-        abulge = a_hernquist(rh, xyz[0], xyz[1], xyz[2], M_bulge)
-
-        Ax = ahalo[0] + adisk[0] + abulge[0]
-        Ay = ahalo[1] + adisk[1] + abulge[1]
-        Az = ahalo[2] + adisk[2] + abulge[2]
+        Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac)
 
         #  generalize this to a Hernquist halo as well.
         if dfric==1:

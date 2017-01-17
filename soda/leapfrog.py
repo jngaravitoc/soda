@@ -3,6 +3,33 @@ from astropy import units, constants
 from .acceleration import *
 from .dynamical_friction import *
 
+def initialize_coordinates(n_points):
+    x = np.zeros(n_points)
+    y = np.zeros(n_points)
+    z = np.zeros(n_points)
+
+    vx = np.zeros(n_points)
+    vy = np.zeros(n_points)
+    vz = np.zeros(n_points)
+
+    ax = np.zeros(n_points)
+    ay = np.zeros(n_points)
+    az = np.zeros(n_points)
+
+    return x, y, z, vx, vy, vz, ax, ay, az
+
+def relative_coordinates(x1, y1, z1, x2, y2, z2, vx1, vy1, \
+                         vz1, vx2, vy2, vz2):
+
+    """
+    compute relative coordinates.
+    """
+
+    xyz_rel = np.array([x1[0]-x2[0], y1[1]-y2[1], z1[2]-z2[2]])
+    vxyz_rel = np.array([vx1[0]-vx2[0], vy1[1]-vy2[1], vz1[2]-vz2[2]])
+
+    return xyz_rel, vxyz_rel
+
 def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
              sat_model, disk_params, bulge_params, ac=0, \
              dfric=1, alpha=[0, 1], host_move=1, direction=1, dt=0.01):
@@ -43,10 +70,9 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     2. Integrate with galpy/gala
     3. Used in arbitrary accelerations/SCF
     """
+
     lmc_pos = np.array([-1, -41, -28])
     lmc_vel = np.array([-57, -226, 221])
-
-
 
     conv_factor = 1.0227121650537077 # from km/s to Kpc/Gyr
     # h is the time step
@@ -54,29 +80,9 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     n_points = int(time / dt) # Make this an input parameter!
 
     t = np.zeros(n_points)
-    x = np.zeros(n_points)
-    y = np.zeros(n_points)
-    z = np.zeros(n_points)
 
-    x_mw = np.zeros(n_points)
-    y_mw = np.zeros(n_points)
-    z_mw = np.zeros(n_points)
-
-    vx = np.zeros(n_points)
-    vy = np.zeros(n_points)
-    vz = np.zeros(n_points)
-
-    vx_mw  = np.zeros(n_points)
-    vy_mw  = np.zeros(n_points)
-    vz_mw  = np.zeros(n_points)
-
-    ax = np.zeros(n_points)
-    ay = np.zeros(n_points)
-    az = np.zeros(n_points)
-
-    ax_mw  = np.zeros(n_points)
-    ay_mw  = np.zeros(n_points)
-    az_mw  = np.zeros(n_points)
+    x, y, z, vx, vy, vz, ax, ay, az = initialize_coordinates(n_points)
+    x_mw, y_mw, z_mw, vx_mw, vy_mw, vz_mw, ax_mw, ay_mw, az_mw = initialize_coordinates(n_points)
 
     t[0] = 0 # Make this an input parameter?
 
@@ -114,8 +120,11 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     vy_mw[0] = vel_host[1]*conv_factor
     vz_mw[0] = vel_host[2]*conv_factor
 
-    pos_0 = np.array([x[0]-x_mw[0], y[0]-y_mw[0], z[0]-z_mw[0]])
-    vel_0 = np.array([vx[0]-vx_mw[0], vy[0]-vy_mw[0], vz[0]-vz_mw[0]])
+    pos_0, vel_0 = relative_positions(x[0], y[0], z[0], x_mw[0],\
+                                      y_mw[0], z_mw[0], vx[0], \
+                                      vy[0], vz[0], vx_mw[0], \
+                                      vy_mw[0], vz_mw[0])
+
 
     ax[0] = acc_sat(pos_0, vel_0, host_model, sat_model, \
                     disk_params, bulge_params, ac, dfric, alpha)[0]
@@ -145,8 +154,11 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     vy[1] = vy[0] - h * ay[0]
     vz[1] = vz[0] - h * az[0]
 
-    pos_1 = np.array([x[1]-x_mw[1], y[1]-y_mw[1], z[1]-z_mw[1]])
-    vel_1 = np.array([vx[1]-vx_mw[1], vy[1]-vy_mw[1], vz[1]-vz_mw[1]])
+
+    pos_1, vel_1 = relative_positions(x[1], y[1], z[1], x_mw[1],\
+                                      y_mw[1], z_mw[1], vx[1], \
+                                      vy[1], vz[1], vx_mw[1], \
+                                      vy_mw[1], vz_mw[1])
 
     if (host_move==1):
         x_mw[1] = x_mw[0] - h * vx_mw[0]
@@ -157,8 +169,10 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
         vy_mw[1] = vy_mw[0] - h * ay_mw[0]
         vz_mw[1] = vz_mw[0] - h * az_mw[0]
 
-        pos_1 = np.array([x[1]-x_mw[1], y[1]-y_mw[1], z[1]-z_mw[1]])
-        vel_1 = np.array([vx[1]-vx_mw[1], vy[1]-vy_mw[1], vz[1]-vz_mw[1]])
+        pos_1, vel_1 = relative_positions(x[1], y[1], z[1], x_mw[1],\
+                                          y_mw[1], z_mw[1], vx[1], \
+                                          vy[1], vz[1], vx_mw[1], \
+                                          vy_mw[1], vz_mw[1])
 
         ax_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[0]
         ay_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[1]
@@ -184,9 +198,10 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
         vy[i] = vy[i-2] - 2 * h * ay[i-1]
         vz[i] = vz[i-2] - 2 * h * az[i-1]
 
-        pos_i = np.array([x[i]-x_mw[i], y[i]-y_mw[i], z[i]-z_mw[i]])
-        vel_i = np.array([vx[i]-vx_mw[i], vy[i]-vy_mw[i], vz[i]-vz_mw[i]])
-
+        pos_i, vel_i = relative_positions(x[i], y[i], z[i], x_mw[i],\
+                                          y_mw[i], z_mw[i], vx[i], \
+                                          vy[i], vz[i], vx_mw[i], \
+                                          vy_mw[i], vz_mw[i])
         if (host_move==1):
             x_mw[i] = x_mw[i-2] - 2 * h * vx_mw[i-1]
             y_mw[i] = y_mw[i-2] - 2 * h * vy_mw[i-1]
@@ -196,8 +211,11 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
             vy_mw[i] = vy_mw[i-2] - 2 * h * ay_mw[i-1]
             vz_mw[i] = vz_mw[i-2] - 2 * h * az_mw[i-1]
 
-            pos_i = np.array([x[i]-x_mw[i], y[i]-y_mw[i], z[i]-z_mw[i]])
-            vel_i = np.array([vx[i]-vx_mw[i], vy[i]-vy_mw[i], vz[i]-vz_mw[i]])
+
+            pos_i, vel_i = relative_positions(x[i], y[i], z[i], x_mw[i],\
+                                              y_mw[i], z_mw[i], vx[i], \
+                                              vy[i], vz[i], vx_mw[i], \
+                                              vy_mw[i], vz_mw[i])
 
             ax_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[0]
             ay_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[1]
