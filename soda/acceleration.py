@@ -64,7 +64,8 @@ def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac):
             c_host = host_model[3]
             ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2],\
                                M_host, Rvir_host)
-         elif (host_model[0] == 'hernquist'):
+        elif (host_model[0] == 'hernquist'):
+
             rs_host = host_model[2]
             ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
                                 M_host)
