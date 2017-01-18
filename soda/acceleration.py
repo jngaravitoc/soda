@@ -13,7 +13,7 @@ from .profiles import *
 from .dynamical_friction import *
 
 
-def particle_acceleartion_LMC(M_LMC, xyz_LMC, xyz_MW, host_model, \
+def particle_acceleartion_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
                               disk_params, bulge_params, ac):
 
     """
@@ -24,9 +24,10 @@ def particle_acceleartion_LMC(M_LMC, xyz_LMC, xyz_MW, host_model, \
 
     """
 
+    M_LMC = sat_model[1] * units.Msun
     r_to_LMC = np.sqrt(xyz_LMC[0]**2.0 + xyz_LMC[1]**2.0 + xyz_LMC[2]**2.0)
-    Ax_LMC, Ay_LMC, Az_LMC = particle_acceleration(M_LMC, xyz, r_to_LMC)
-    Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac)
+    Ax_LMC, Ay_LMC, Az_LMC = particle_acceleration(M_LMC, xyz_LMC, r_to_LMC)
+    Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz_MW, host_model, disk_params, bulge_params, ac)
 
     return Ax_LMC + Ax_MW, Ay_LMC + Ay_MW, Az_LMC + Az_MW
 
@@ -54,6 +55,7 @@ def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac):
 
     M_disk, a_disk, b_disk = disk_params
     M_bulge, rh = bulge_params
+    M_host = host_model[1]
 
     if (ac == 1):
        print('No ac yet!')

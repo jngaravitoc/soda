@@ -31,7 +31,7 @@ def relative_coordinates(x1, y1, z1, x2, y2, z2, vx1, vy1, \
     return xyz_rel, vxyz_rel
 
 def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
-             sat_model, disk_params, bulge_params, ac=0, \
+             sat_model, disk_params, bulge_params, pos_p, vel_p, ac=0, \
              dfric=1, alpha=[0, 1], host_move=1, direction=1, dt=0.01):
 
     """
@@ -48,6 +48,8 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     sat_model: array('NFW'/'hernquist'/'plummer', Mass 1E10, Rvir/rs, concentration)
     disk_params: array(Mass, a, b)
     bulge_params: array(Mass, r_s)
+    pos_p
+    vel_p
     ac (optional, default=0): No (0), Yes(1)
     dfric: Include dynamical friction No(0), default Yes(1)
     alpha: array(cl, alpha, L, C), cl=0 (), cl=1 (Van der Marel)
@@ -62,6 +64,8 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     vel_sat:
     pos_host:
     vel_host:
+    pos_p
+    vel_p
 
     TO-DO:
     ------
@@ -82,8 +86,10 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     t = np.zeros(n_points)
 
     x_lmc, y_lmc, z_lmc, vx_lmc, vy_lmc, vz_lmc, ax_lmc, ay_lmc, az_lmc = initialize_coordinates(n_points)
-
+    # alternatively I could just copy the arrays, what's more
+    # efficient?
     x_mw, y_mw, z_mw, vx_mw, vy_mw, vz_mw, ax_mw, ay_mw, az_mw = initialize_coordinates(n_points)
+    x_p, y_p, z_p, vx_p, vy_p, vz_p, ax_p, ay_p, az_p= initialize_coordinates(n_points)
 
     t[0] = 0 # Make this an input parameter?
 
@@ -112,6 +118,15 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     vy_mw[0] = vel_host[1]*conv_factor
     vz_mw[0] = vel_host[2]*conv_factor
 
+
+    x_p[0] = pos_p[0]
+    y_p[0] = pos_p[1]
+    z_p[0] = pos_p[2]
+
+    vx_p[0] = vel_p[0]*conv_factor
+    vy_p[0] = vel_p[1]*conv_factor
+    vz_p[0] = vel_p[2]*conv_factor
+
     pos_0, vel_0 = relative_coordinates(x_lmc[0], y_lmc[0], z_lmc[0], x_mw[0],\
                                       y_mw[0], z_mw[0], vx_lmc[0], \
                                       vy_lmc[0], vz_lmc[0], vx_mw[0], \
@@ -131,10 +146,21 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     ay_mw[0] = acc_host(-pos_0, -vel_0, host_model, sat_model)[1]
     az_mw[0] = acc_host(-pos_0, -vel_0, host_model, sat_model)[2]
 
+    pos_p2lmc_0, vel_p2lmc_0 = relative_coordinates(x_p[0], y_p[0], z_p[0],\
+                               x_lmc[0], y_lmc[0], z_lmc[0],vx_p[0], vy_p[0],\
+                               vz_p[0], vx_lmc[0], vy_lmc[0], vz_lmc[0])
+
+    pos_p2mw_0, vel_p2mw_0 = relative_coordinates(x_p[0], y_p[0], z_p[0],\
+                               x_mw[0], y_mw[0], z_mw[0],vx_p[0], vy_p[0],\
+                               vz_p[0], vx_mw[0], vy_mw[0], vz_mw[0])
+
+    ax_p[0], ay_p[0], az_p[0] = particle_acceleartion_LMC(pos_p2lmc_0, \
+                                                 pos_p2mw_0, sat_model, host_model,\
+                                                 disk_params, bulge_params,\
+                                                 ac)
+
     # half step
     # Here I assume the host galaxy starts at position (0, 0, 0) and then its
-    #print(ax[0], ay[0], az[0], ax_mw[0], ay_mw[0], az_mw[0])
-    #print(vx[0], vy[0], vz[0], vx_mw[0], vy_mw[0], vz_mw[0])
 
     # initial v[1] is (0, 0, 0)
     t[1] = t[0] - h
@@ -151,6 +177,22 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
                                       y_mw[1], z_mw[1], vx_lmc[1], \
                                       vy_lmc[1], vz_lmc[1], vx_mw[1], \
                                       vy_mw[1], vz_mw[1])
+
+    x_p[1] = x_p[0] - h * vx_p[0]
+    y_p[1] = y_p[0] - h * vy_p[0]
+    z_p[1] = z_p[0] - h * vz_p[0]
+
+    vx_p[1] = vx_p[0] - h * ax_p[0]
+    vy_p[1] = vy_p[0] - h * ay_p[0]
+    vz_p[1] = vz_p[0] - h * az_p[0]
+
+    pos_p2lmc_1, vel_p2lmc_1 = relative_coordinates(x_p[1], y_p[1], z_p[1],\
+                               x_lmc[1], y_lmc[1], z_lmc[1],vx_p[1], vy_p[1],\
+                               vz_p[1], vx_lmc[1], vy_lmc[1], vz_lmc[1])
+
+    pos_p2mw_1, vel_p2mw_1 = relative_coordinates(x_p[1], y_p[1], z_p[1],\
+                               x_mw[1], y_mw[1], z_mw[1],vx_p[1], vy_p[1],\
+                               vz_p[1], vx_mw[1], vy_mw[1], vz_mw[1])
 
     if (host_move==1):
         x_mw[1] = x_mw[0] - h * vx_mw[0]
@@ -170,6 +212,11 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
         ay_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[1]
         az_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[2]
 
+
+        pos_p2mw_1, vel_p2mw_1 = relative_coordinates(x_p[1], y_p[1], z_p[1],\
+                                   x_mw[1], y_mw[1], z_mw[1],vx_p[1], vy_p[1],\
+                                   vz_p[1], vx_mw[1], vy_mw[1], vz_mw[1])
+
     ax_lmc[1] = acc_sat(pos_1, vel_1, host_model, sat_model\
                    ,disk_params, bulge_params, ac, dfric, alpha)[0]
     ay_lmc[1] = acc_sat(pos_1, vel_1, host_model, sat_model\
@@ -177,8 +224,12 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
     az_lmc[1] = acc_sat(pos_1, vel_1, host_model, sat_model\
                    ,disk_params, bulge_params, ac, dfric, alpha)[2]
 
-    #print(ax[1], ay[1], az[1], ax_mw[1], ay_mw[1], az_mw[1])
-    #print(vx[1], vy[1], vz[1], vx_mw[1], vy_mw[1], vz_mw[1])
+
+
+    ax_p[1], ay_p[1], az_p[1] = particle_acceleartion_LMC(pos_p2lmc_1, \
+                                                 pos_p2mw_1, sat_model, host_model,\
+                                                 disk_params, bulge_params,\
+                                                 ac)
 
     for i in range(2, len(x_lmc)):
         t[i] = t[i-1] - h
@@ -194,6 +245,24 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
                                           y_mw[i], z_mw[i], vx_lmc[i], \
                                           vy_lmc[i], vz_lmc[i], vx_mw[i], \
                                           vy_mw[i], vz_mw[i])
+
+        x_p[i] = x_p[i-2] - 2 * h * vx_p[i-1]
+        y_p[i] = y_p[i-2] - 2 * h * vy_p[i-1]
+        z_p[i] = z_p[i-2] - 2 * h * vz_p[i-1]
+
+        vx_p[i] = vx_p[i-2] - 2 * h * ax_p[i-1]
+        vy_p[i] = vy_p[i-2] - 2 * h * ay_p[i-1]
+        vz_p[i] = vz_p[i-2] - 2 * h * az_p[i-1]
+
+        pos_p2lmc_i, vel_p2lmc_i = relative_coordinates(x_p[i],y_p[i], z_p[i],\
+                                   x_lmc[i], y_lmc[i], z_lmc[i],vx_p[i], vy_p[i],\
+                                   vz_p[i], vx_lmc[i], vy_lmc[i], vz_lmc[i])
+
+        pos_p2mw_i, vel_p2mw_i = relative_coordinates(x_p[i], y_p[i], z_p[i],\
+                                  x_mw[i], y_mw[i], z_mw[i],vx_p[i], vy_p[i],\
+                                  vz_p[i], vx_mw[i], vy_mw[i], vz_mw[i])
+
+
         if (host_move==1):
             x_mw[i] = x_mw[i-2] - 2 * h * vx_mw[i-1]
             y_mw[i] = y_mw[i-2] - 2 * h * vy_mw[i-1]
@@ -213,6 +282,11 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
             ay_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[1]
             az_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[2]
 
+
+            pos_p2mw_i, vel_p2mw_i = relative_coordinates(x_p[i], y_p[i], z_p[i],\
+                                      x_mw[i], y_mw[i], z_mw[i],vx_p[i], vy_p[i],\
+                                      vz_p[i], vx_mw[i], vy_mw[i], vz_mw[i])
+
         ax_lmc[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
                        ,disk_params, bulge_params, ac, dfric, alpha)[0]
         ay_lmc[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
@@ -220,5 +294,14 @@ def integrate(time, pos_sat, vel_sat, pos_host, vel_host, host_model, \
         az_lmc[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
                        ,disk_params, bulge_params, ac, dfric, alpha)[2]
 
+
+
+        ax_p[i], ay_p[i], az_p[i] = particle_acceleartion_LMC(pos_p2lmc_i, \
+                                                 pos_p2mw_i, sat_model, host_model,\
+                                                 disk_params, bulge_params,\
+                                                 ac)
+
+
     return t, np.array([x_lmc, y_lmc, z_lmc]).T, np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor, \
-           np.array([x_mw, y_mw, z_mw]).T, np.array([vx_mw, vy_mw,vz_mw]).T/conv_factor
+           np.array([x_mw, y_mw, z_mw]).T, np.array([vx_mw,vy_mw,vz_mw]).T/conv_factor,\
+           np.array([x_p, y_p, z_p]).T, np.array([vx_p, vy_p, vz_p]).T/conv_factor
