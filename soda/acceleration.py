@@ -13,7 +13,7 @@ from .profiles import *
 from .dynamical_friction import *
 
 
-def particle_acceleartion_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
+def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
                               disk_params, bulge_params, ac):
 
     """

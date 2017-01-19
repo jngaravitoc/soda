@@ -72,7 +72,7 @@ def relative_coordinates(x1, y1, z1, x2, y2, z2, vx1, vy1, \
     return xyz_rel, vxyz_rel
 
 def extract(dct, namespace=None):
-    # function that extracts variables
+    # function that extracts variables from kwargs
     # from:
     # http://stackoverflow.com/questions/4357851/creating-or-assigning-variables-from-a-dictionary-in-python
 
@@ -188,13 +188,10 @@ def integrate_mw(time, pos_p, vel_p, host_model, disk_params,\
 
 
 def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
-              bulge_params, ac=0, dfric=1, alpha=[0, 1], host_move=1, 
-              direction=1, dt=0.01, **kwargs):
-
-# kwargs: sat_model, pos_sat, vel_sat, pos_p, vel_p
+                  bulge_params, ac=0, dfric=1, alpha=[0, 1], host_move=1,
+                  direction=1, dt=0.01, **kwargs):
 
 ## to do: generalize to any MW potential, maybe without a disk or
-## with!
 
     """
     Orbit integrator:
@@ -239,8 +236,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
     extract(kwargs)
 
-    print(vel_sat)
-    print(sat_model)
+    sat_model = satellite_model
 
     if 'lmc_model' in kwargs:
         print('using the ', lmc_model)
@@ -394,48 +390,51 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                        ,disk_params, bulge_params, ac, dfric, alpha)[2]
 
 
-    if pos_p == True:
-        x_p, y_p, z_p, vx_p, vy_p, vz_p = integrate_sat_helper(n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
+    if 'pos_p' in kwargs:
+        x_p, y_p, z_p, vx_p, vy_p, vz_p = integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
                                           vz_mw, x_lmc, y_lmc, z_lmc, vx_lmc, vy_lmc,\
                                           vz_lmc, sat_model, host_model, disk_params, \
-                                          bulge_params, ac)
+                                          bulge_params, pos_p, vel_p, ac, dt, direction)
 
-    return t, np.array([x_lmc, y_lmc, z_lmc]).T, np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor, \
-           np.array([x_mw, y_mw, z_mw]).T, np.array([vx_mw,vy_mw,vz_mw]).T/conv_factor,\
-           np.array([x_p, y_p, z_p]).T, np.array([vx_p, vy_p, vz_p]).T/conv_factor
+        return t, np.array([x_lmc, y_lmc, z_lmc]).T, np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor, \
+               np.array([x_mw, y_mw, z_mw]).T, np.array([vx_mw,vy_mw,vz_mw]).T/conv_factor,\
+               np.array([x_p, y_p, z_p]).T, np.array([vx_p, vy_p, vz_p]).T/conv_factor
 
+    else:
 
-def integrate_sat_helper(n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
+        return t, np.array([x_lmc, y_lmc, z_lmc]).T, np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor, \
+               np.array([x_mw, y_mw, z_mw]).T, np.array([vx_mw,vy_mw,vz_mw]).T/conv_factor
+
+def integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
                          vz_mw, x_lmc, y_lmc, z_lmc, vx_lmc, vy_lmc,\
                          vz_lmc, sat_model, host_model, disk_params, \
-                         bulge_params, ac):
+                         bulge_params, pos_sat, vel_sat, ac, dt, direction):
 
     conv_factor = 1.0227121650537077 # from km/s to Kpc/Gyr
 
     h = dt * direction
     n_points = int(time / dt) # Make this an input parameter!
-
+    t = np.zeros(n_points)
     t[0]=0
     x_p, y_p, z_p, vx_p, vy_p, vz_p, ax_p, ay_p, az_p= initialize_coordinates(n_points)
 
-    x_p[0] = pos_p[0]
-    y_p[0] = pos_p[1]
-    z_p[0] = pos_p[2]
+    x_p[0] = pos_sat[0]
+    y_p[0] = pos_sat[1]
+    z_p[0] = pos_sat[2]
 
-    vx_p[0] = vel_p[0]*conv_factor
-    vy_p[0] = vel_p[1]*conv_factor
-    vz_p[0] = vel_p[2]*conv_factor
-
+    vx_p[0] = vel_sat[0]*conv_factor
+    vy_p[0] = vel_sat[1]*conv_factor
+    vz_p[0] = vel_sat[2]*conv_factor
 
     pos_p2lmc_0, vel_p2lmc_0 = relative_coordinates(x_p[0], y_p[0], z_p[0],\
-                               x_lmc[0], y_lmc[0], z_lmc[0],vx_p[0], vy_p[0],\
+                               x_lmc[0], y_lmc[0], z_lmc[0], vx_p[0], vy_p[0],\
                                vz_p[0], vx_lmc[0], vy_lmc[0], vz_lmc[0])
 
     pos_p2mw_0, vel_p2mw_0 = relative_coordinates(x_p[0], y_p[0], z_p[0],\
-                               x_mw[0], y_mw[0], z_mw[0],vx_p[0], vy_p[0],\
+                               x_mw[0], y_mw[0], z_mw[0], vx_p[0], vy_p[0],\
                                vz_p[0], vx_mw[0], vy_mw[0], vz_mw[0])
 
-    ax_p[0], ay_p[0], az_p[0] = particle_acceleartion_LMC(pos_p2lmc_0, \
+    ax_p[0], ay_p[0], az_p[0] = particle_acceleration_LMC(pos_p2lmc_0, \
                                                  pos_p2mw_0, sat_model, host_model,\
                                                  disk_params, bulge_params,\
                                                  ac)
@@ -451,16 +450,16 @@ def integrate_sat_helper(n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
     vz_p[1] = vz_p[0] - h * az_p[0]
 
     pos_p2lmc_1, vel_p2lmc_1 = relative_coordinates(x_p[1], y_p[1], z_p[1],\
-                               x_lmc[1], y_lmc[1], z_lmc[1],vx_p[1], vy_p[1],\
+                               x_lmc[1], y_lmc[1], z_lmc[1], vx_p[1], vy_p[1],\
                                vz_p[1], vx_lmc[1], vy_lmc[1], vz_lmc[1])
 
     pos_p2mw_1, vel_p2mw_1 = relative_coordinates(x_p[1], y_p[1], z_p[1],\
-                               x_mw[1], y_mw[1], z_mw[1],vx_p[1], vy_p[1],\
+                               x_mw[1], y_mw[1], z_mw[1], vx_p[1], vy_p[1],\
                                vz_p[1], vx_mw[1], vy_mw[1], vz_mw[1])
 
 
 
-    ax_p[1], ay_p[1], az_p[1] = particle_acceleartion_LMC(pos_p2lmc_1, \
+    ax_p[1], ay_p[1], az_p[1] = particle_acceleration_LMC(pos_p2lmc_1, \
                                                  pos_p2mw_1, sat_model, host_model,\
                                                  disk_params, bulge_params,\
                                                  ac)
@@ -478,7 +477,7 @@ def integrate_sat_helper(n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
         vz_p[i] = vz_p[i-2] - 2 * h * az_p[i-1]
 
         pos_p2lmc_i, vel_p2lmc_i = relative_coordinates(x_p[i],y_p[i], z_p[i],\
-                                   x_lmc[i], y_lmc[i], z_lmc[i],vx_p[i], vy_p[i],\
+                                   x_lmc[i], y_lmc[i], z_lmc[i], vx_p[i], vy_p[i],\
                                    vz_p[i], vx_lmc[i], vy_lmc[i], vz_lmc[i])
 
         pos_p2mw_i, vel_p2mw_i = relative_coordinates(x_p[i], y_p[i], z_p[i],\
@@ -486,7 +485,7 @@ def integrate_sat_helper(n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
                                   vz_p[i], vx_mw[i], vy_mw[i], vz_mw[i])
 
 
-        ax_p[i], ay_p[i], az_p[i] = particle_acceleartion_LMC(pos_p2lmc_i, \
+        ax_p[i], ay_p[i], az_p[i] = particle_acceleration_LMC(pos_p2lmc_i, \
                                                  pos_p2mw_i, sat_model, host_model,\
                                                  disk_params, bulge_params,\
                                                  ac)

@@ -45,7 +45,6 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
     Function that computes the dynamical friction
     of a satellite around the host halo.
 
-    
     """
 
     # M2 would be the galaxy feeling the dynamical friction due to M1
@@ -55,7 +54,7 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
 
     # Velocities
     v = np.sqrt(vx**2.0 + vy**2.0 + vz**2.0)
-    v = v * units.kpc / units.Gyr
+    v = v * units.kpc / units.Gyr  # is it?
 
     # Density of the host galaxy at r
     if (ac==1):
@@ -71,8 +70,8 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
     rho = rho * units.Msun / units.kpc**3.0
 
     # Computing the dynamical friction
-    factor = - 4.0 * np.pi * G**2.0
-    factor = factor.to(units.kpc**6.0 / units.Msun**2.0 / units.Gyr**4.0)
+    forpiG2 = - 4.0 * np.pi * G**2.0
+    forpiG2 = forpiG2.to(units.kpc**6.0 / units.Msun**2.0 / units.Gyr**4.0)
 
     #factor = factor.value
     vx = vx * units.kpc / units.Gyr
@@ -83,7 +82,7 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
 
     if (alpha[0]==0):
          Coulomb = coulomb_log(r, alpha[1])
-    elif (alpha[1]==1):
+    elif (alpha[0]==1):
          L = alpha[2]
          C = alpha[3]
          Coulomb = coulomb_v_log(L, r, alpha[1], rs_sat ,C)
@@ -96,11 +95,11 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
 
     # Dynamical friction equation
 
-    a_dfx = (factor*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
+    a_dfx = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
              *np.exp(-X**2.0))*vx)/v**3.0
-    a_dfy = (factor*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
+    a_dfy = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
              *np.exp(-X**2.0))*vy)/v**3.0
-    a_dfz = (factor*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
+    a_dfz = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
              *np.exp(-X**2.0))*vz)/v**3.0
 
     # Units conversion
