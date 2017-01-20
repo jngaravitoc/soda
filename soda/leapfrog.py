@@ -194,7 +194,8 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 ## to do: generalize to any MW potential, maybe without a disk or
 
     """
-    Orbit integrator:
+    Orbit integrator of satellites around a host halo with disk and
+    bulge.
 
     Input:
     ------
@@ -250,9 +251,10 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
     t = np.zeros(n_points)
 
     x_lmc, y_lmc, z_lmc, vx_lmc, vy_lmc, vz_lmc, ax_lmc, ay_lmc, az_lmc = initialize_coordinates(n_points)
-    # alternatively I could just copy the arrays, what's more
-    # efficient?
     x_mw, y_mw, z_mw, vx_mw, vy_mw, vz_mw, ax_mw, ay_mw, az_mw = initialize_coordinates(n_points)
+
+    if 'pos_sat2' in kwargs:
+         x_sag, y_sag, z_sag, vx_sag, vy_sag, vz_sag, ax_sag, ay_sag, az_sag = initialize_coordinates(n_points)
 
     t[0] = 0 # Make this an input parameter?
 

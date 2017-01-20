@@ -13,6 +13,14 @@ from .profiles import *
 from .dynamical_friction import *
 
 
+def extract(dct, namespace=None):
+    # function that extracts variables from kwargs
+    # from:
+    # http://stackoverflow.com/questions/4357851/creating-or-assigning-variables-from-a-dictionary-in-python
+
+    if not namespace: namespace = globals()
+    namespace.update(dct)
+
 def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
                               disk_params, bulge_params, ac):
 
@@ -48,7 +56,8 @@ def particle_acceleration(Mtot, xyz, r):
     return Ax, Ay, Az
 
 
-def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac):
+def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac,
+                   **kwargs):
     """
     Computes the acceleration of a particle inside a given MW model.
     """
@@ -79,11 +88,19 @@ def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac):
     Ay = ahalo[1] + adisk[1] + abulge[1]
     Az = ahalo[2] + adisk[2] + abulge[2]
 
+    extract(kwargs)
+
+    if 'sat2' in kwargs:
+        ax_s2, ay_s2, az_s2 = particle_acceleration(Msat2, xyzrs1rs2, rs1s2)
+        Ax+=ax_s2
+        Ay+=ay_s2
+        Az+=az_s2
+
     return Ax, Ay, Az
 
 #Function that computes the satellite acceleration
 def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
-            bulge_params, ac, dfric, alpha=False):
+            bulge_params, ac, dfric, alpha=False, **kwargs):
     """
     Function that computes the satellite acceleration
     due to it's host galaxy.
@@ -109,8 +126,9 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
     TO-DO:
     ------
-    1. Disk and Bulge as optional parameters.
+    1. Disk and Bulge as optional parameters
     2. Link with galpy/gala
+
     """
 
     r = np.sqrt(xyz[0]**2 + xyz[1]**2 + xyz[2]**2)
@@ -128,9 +146,15 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
     # Acceleration by the DM halo profile
 
+    extract(kwargs)
     if ((r<=Rvir_host) & (dfric==1)):
 
-        Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac)
+        Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params, \
+                                    bulge_params, ac)
+
+        if 'sat2_model' in kwargs:
+            Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params, \
+                                        bulge_params, ac, sat2=sat2_model)
 
         #  generalize this to a Hernquist halo as well.
         if dfric==1:
@@ -150,7 +174,7 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     return Ax, Ay, Az
 
 
-def acc_host(xyz, vxyz, host_model, sat_model):
+def acc_host(xyz, vxyz, host_model, sat_model, **kwargs):
 
     """
     Function that computes the host galaxy  acceleration
@@ -196,9 +220,35 @@ def acc_host(xyz, vxyz, host_model, sat_model):
         rs_sat = sat_model[2]
         A_host = a_plummer(rs_sat, xyz[0], xyz[1], xyz[2], M_sat)
 
+
     Ax = A_host[0]
     Ay = A_host[1]
     Az = A_host[2]
+
+    extract(kwargs)
+    if 'sat2_model' in kwargs:
+        if (sat_model2[0] == 'NFW'):
+            c_sat2 = sat_model2[3]
+            M_sat2 = sat_model2[1]
+            Rvir_sat2 = sat_model2[2]
+            A_host2 = a_NFWnRvir(c_sat2, xyz2[0], xyz2[1], xyz2[2], \
+                                 M_sat2, Rvir_sat2)
+
+        elif (sat_model2[0] == 'hernquist'):
+            M_sat2 = sat_model2[1]
+            rs_sat2 = sat_model2[2]
+            A_host2 = a_hernquist(rs_sat2, xyz2[0], xyz2[1], xyz2[2],\
+                                  M_sat2)
+
+        elif (sat_model2[0] == 'plummer'):
+            M_sat2 = sat_model2[1]
+            rs_sat2 = sat_model2[2]
+            A_host2 = a_plummer(rs_sat2, xyz2[0], xyz2[1], xyz2[2],\
+                                M_sat2)
+
+        Ax += A_host2[0]
+        Ay += A_host2[1]
+        Az += A_host2[2]
 
     """
     # Host dynamical friction:
@@ -216,4 +266,7 @@ def acc_host(xyz, vxyz, host_model, sat_model):
         Ay = Ay + a_dfy
         Az = Az + a_dfz
     """
+
     return Ax, Ay, Az
+
+
