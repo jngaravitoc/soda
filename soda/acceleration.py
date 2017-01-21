@@ -22,7 +22,8 @@ def extract(dct, namespace=None):
     namespace.update(dct)
 
 def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
-                              disk_params, bulge_params, ac):
+                              disk_params, bulge_params, ac, **kwargs):
+
 
     """
     Acceleration of a particle in the presence of the LMC,
@@ -32,10 +33,18 @@ def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
 
     """
 
+    extract(kwargs)
+
     M_LMC = sat_model[1] * units.Msun
     r_to_LMC = np.sqrt(xyz_LMC[0]**2.0 + xyz_LMC[1]**2.0 + xyz_LMC[2]**2.0)
+    r_to_sag = np.sqrt(pos_sat2[0]**2.0 + pos_sat2[1]**2.0 + pos_sat2[2]**2.0)
     Ax_LMC, Ay_LMC, Az_LMC = particle_acceleration(M_LMC, xyz_LMC, r_to_LMC)
     Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz_MW, host_model, disk_params, bulge_params, ac)
+
+    if 'pos_sat2' in kwargs:
+        M_sag = sat_model2[1] * units.Msun
+        r_to_sag = np.sqrt(pos_sat2[0]**2.0 + pos_sat2[1]**2.0 + pos_sat2[2]**2.0)
+        Ax_sag, Ay_sag, Az_sag = particle_acceleration(M_sag, pos_sat2, r_to_LMC)
 
     return Ax_LMC + Ax_MW, Ay_LMC + Ay_MW, Az_LMC + Az_MW
 
@@ -152,10 +161,6 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
         Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params, \
                                     bulge_params, ac)
 
-        if 'sat2_model' in kwargs:
-            Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params, \
-                                        bulge_params, ac, sat2=sat2_model)
-
         #  generalize this to a Hernquist halo as well.
         if dfric==1:
             c_host = host_model[3]
@@ -170,6 +175,11 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     else:
         Ax, Ay, Az = particle_acceleration((M_host + M_disk + \
                                            M_bulge)*units.Msun, xyz, r)
+
+    if 'sat2_model' in kwargs:
+        r_sat2 = (xyz2[:,0]**2.0 + xyz[:,1]**2 + xyz[:,2]**2)**0.5
+        Ax2, Ay2, Az2 = particle_acceleration(sat2_model[1], xyz2, r_sat2)
+        return Ax+Ax2, Ay+Ay2, Az+Az2
 
     return Ax, Ay, Az
 

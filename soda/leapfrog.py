@@ -275,6 +275,15 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         vy_lmc[0] = vel_sat[1]*conv_factor
         vz_lmc[0] = vel_sat[2]*conv_factor
 
+    if 'pos_sat2' in kwargs:
+        x_sag[0] = pos_sat2[0]
+        y_sag[1] = pos_sat2[1]
+        z_sag[2] = pos_sat2[2]
+
+        vx_sag[0] = vel_sat2[0]*conv_factor
+        vy_sag[1] = vel_sat2[1]*conv_factor
+        vz_sag[2] = vel_sat2[2]*conv_factor
+
     x_mw[0] = pos_host[0]
     y_mw[0] = pos_host[1]
     z_mw[0] = pos_host[2]
@@ -284,23 +293,48 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
     vz_mw[0] = vel_host[2]*conv_factor
 
 
-    pos_0, vel_0 = relative_coordinates(x_lmc[0], y_lmc[0], z_lmc[0], x_mw[0],\
-                                      y_mw[0], z_mw[0], vx_lmc[0], \
-                                      vy_lmc[0], vz_lmc[0], vx_mw[0], \
-                                      vy_mw[0], vz_mw[0])
+    ## Relative positions definitions:
+    ## pos_hs relative position between the satellite and the host
+    ## pos_hs2 relative position between the satellite and the host
+    ## pos_ss: relative distance between the satellites
 
-    ax_lmc[0] = acc_sat(pos_0, vel_0, host_model, sat_model, \
-                        disk_params, bulge_params, ac, dfric, alpha)[0]
 
-    ay_lmc[0] = acc_sat(pos_0, vel_0, host_model, sat_model, \
-                        disk_params, bulge_params, ac, dfric, alpha)[1]
+    pos_hs0, vel_hs0 = relative_coordinates(x_lmc[0], y_lmc[0], z_lmc[0], x_mw[0],\
+                                            y_mw[0], z_mw[0], vx_lmc[0], \
+                                            vy_lmc[0], vz_lmc[0], vx_mw[0], \
+                                            vy_mw[0], vz_mw[0])
 
-    az_lmc[0] = acc_sat(pos_0, vel_0, host_model, sat_model, \
-                    disk_params, bulge_params, ac, dfric, alpha)[2]
 
-    ax_mw[0] = acc_host(-pos_0, -vel_0, host_model, sat_model)[0]
-    ay_mw[0] = acc_host(-pos_0, -vel_0, host_model, sat_model)[1]
-    az_mw[0] = acc_host(-pos_0, -vel_0, host_model, sat_model)[2]
+    if 'pos_sat2' in kwargs:
+
+        pos_hs20, vel_hs20 = relative_coordinates(x_sag[0], y_sag[0], z_sag[0], x_mw[0],\
+                                                y_mw[0], z_mw[0], vx_sag[0], \
+                                                vy_sag[0], vz_sag[0], vx_mw[0], \
+                                                vy_mw[0], vz_mw[0])
+
+
+        pos_ss0, vel_ss0 = relative_coordinates(x_sag[0], y_sag[0], z_sag[0], x_lmc[0],\
+                                              y_lmc[0], z_lmc[0], vx_sag[0], \
+                                              vy_sag[0], vz_sag[0], vx_lmc[0], \
+                                              vy_lmc[0], vz_lmc[0])
+
+    ax_lmc[0],ay_lmc[0], az_lmc[0] = acc_sat(pos_hs0, vel_hs0, host_model, sat_model, \
+                                             disk_params, bulge_params, ac, dfric, alpha)
+
+    ax_mw[0], ay_mw[0], az_mw[0] = acc_host(-pos_hs0, -vel_hs0, host_model, sat_model)
+
+    if 'pos_sat2' in kwargs:
+
+        ax_lmc[0], ay_lmc[0], az_lmc[0] = acc_sat(pos_hs0, vel_hs0, host_model, sat_model,\
+                                                  disk_params, bulge_params, ac, dfric,\
+                                                  alpha, -pos_ss0, -vel_ss0, sat_model2)
+
+        ax_sag[0], ay_sag[0], az_sag[0] = acc_sat(pos_hs20, vel_hs20, host_model, sat_model2,\
+                                                  disk_params, bulge_params, ac, dfric,\
+                                                  alpha, pos_ss0, vel_ss0, sat_model)
+
+        ax_mw[0], ay_mw[0], az_mw[0] = acc_host(-pos_hs0, -vel_hs0, host_model, sat_model,\
+                                                -pos_hs20, -vel_hs20, sat_model2)[0]
 
     # half step
     # Here I assume the host galaxy starts at position (0, 0, 0) and then its
@@ -315,11 +349,35 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
     vy_lmc[1] = vy_lmc[0] - h * ay_lmc[0]
     vz_lmc[1] = vz_lmc[0] - h * az_lmc[0]
 
+    if 'pos_sat2' in kwargs:
 
-    pos_1, vel_1 = relative_coordinates(x_lmc[1], y_lmc[1], z_lmc[1], x_mw[1],\
-                                      y_mw[1], z_mw[1], vx_lmc[1], \
-                                      vy_lmc[1], vz_lmc[1], vx_mw[1], \
-                                      vy_mw[1], vz_mw[1])
+        x_sag[1] = x_sag[0] - h * vx_sag[0]
+        y_sag[1] = y_sag[0] - h * vy_sag[0]
+        z_sag[1] = z_sag[0] - h * vz_sag[0]
+
+        vx_sag[1] = vx_sag[0] - h * ax_sag[0]
+        vy_sag[1] = vy_sag[0] - h * ay_sag[0]
+        vz_sag[1] = vz_sag[0] - h * az_sag[0]
+
+    pos_hs1, vel_hs1 = relative_coordinates(x_lmc[1], y_lmc[1], z_lmc[1], x_mw[1],\
+                                            y_mw[1], z_mw[1], vx_lmc[1], \
+                                            vy_lmc[1], vz_lmc[1], vx_mw[1], \
+                                            vy_mw[1], vz_mw[1])
+
+
+    if 'pos_sat2' in kwargs:
+
+        pos_hs21, vel_hs21 = relative_coordinates(x_sag[1], y_sag[1], z_sag[1], x_mw[1],\
+                                                  y_mw[1], z_mw[1], vx_sag[1], \
+                                                  vy_sag[1], vz_sag[1], vx_mw[1], \
+                                                  vy_mw[1], vz_mw[1])
+
+
+        pos_ss1, vel_ss1 = relative_coordinates(x_sag[1], y_sag[1], z_sag[1], x_lmc[1],\
+                                                y_lmc[1], z_lmc[1], vx_sag[1], \
+                                                vy_sag[1], vz_sag[1], vx_lmc[1], \
+                                                vy_lmc[1], vz_lmc[1])
+
 
     if (host_move==1):
         x_mw[1] = x_mw[0] - h * vx_mw[0]
@@ -330,22 +388,40 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         vy_mw[1] = vy_mw[0] - h * ay_mw[0]
         vz_mw[1] = vz_mw[0] - h * az_mw[0]
 
-        pos_1, vel_1 = relative_coordinates(x_lmc[1], y_lmc[1], z_lmc[1], x_mw[1],\
-                                          y_mw[1], z_mw[1], vx_lmc[1], \
-                                          vy_lmc[1], vz_lmc[1], vx_mw[1], \
-                                          vy_mw[1], vz_mw[1])
+        pos_hs1, vel_hs1 = relative_coordinates(x_lmc[1], y_lmc[1], z_lmc[1], x_mw[1],\
+                                                y_mw[1], z_mw[1], vx_lmc[1], \
+                                                vy_lmc[1], vz_lmc[1], vx_mw[1], \
+                                                vy_mw[1], vz_mw[1])
 
-        ax_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[0]
-        ay_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[1]
-        az_mw[1] = acc_host(-pos_1, -vel_1, host_model, sat_model)[2]
+        ax_mw[1], ay_mw[1], az_mw[1] = acc_host(-pos_hs1, -vel_hs1, host_model, sat_model)
 
 
-    ax_lmc[1] = acc_sat(pos_1, vel_1, host_model, sat_model\
-                   ,disk_params, bulge_params, ac, dfric, alpha)[0]
-    ay_lmc[1] = acc_sat(pos_1, vel_1, host_model, sat_model\
-                   ,disk_params, bulge_params, ac, dfric, alpha)[1]
-    az_lmc[1] = acc_sat(pos_1, vel_1, host_model, sat_model\
-                   ,disk_params, bulge_params, ac, dfric, alpha)[2]
+        if 'pos_sat2' in kwargs:
+
+            ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model,\
+                                                      disk_params, bulge_params, ac, dfric,\
+                                                      alpha, -pos_ss1, -vel_ss1, sat_model2)
+
+            ax_sag[1], ay_sag[1], az_sag[1] = acc_sat(pos_hs21, vel_hs21, host_model, sat_model2,\
+                                                      disk_params, bulge_params, ac, dfric,\
+                                                      alpha, pos_ss1, vel_ss1, sat_model)
+
+            ax_mw[1], ay_mw[1], az_mw[1] = acc_host(-pos_hs1, -vel_hs1, host_model, sat_model,\
+                                                    -pos_hs21,-vel_hs21, sat_model2)
+
+
+    ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model\
+                                              ,disk_params, bulge_params, ac, dfric, alpha)
+
+
+    if 'pos_sat2' in kwargs:
+        ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model,\
+                                                  disk_params, bulge_params, ac, dfric,\
+                                                  alpha, -pos_ss1, -vel_ss1, sat_model2)
+
+        ax_sag[1], ay_sag[1], az_sag[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model2,\
+                                                  disk_params, bulge_params, ac, dfric,\
+                                                  alpha, pos_ss1, vel_ss1, sat_model)
 
     for i in range(2, len(x_lmc)):
         t[i] = t[i-1] - h
@@ -357,11 +433,35 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         vy_lmc[i] = vy_lmc[i-2] - 2 * h * ay_lmc[i-1]
         vz_lmc[i] = vz_lmc[i-2] - 2 * h * az_lmc[i-1]
 
-        pos_i, vel_i = relative_coordinates(x_lmc[i], y_lmc[i], z_lmc[i], x_mw[i],\
-                                          y_mw[i], z_mw[i], vx_lmc[i], \
-                                          vy_lmc[i], vz_lmc[i], vx_mw[i], \
-                                          vy_mw[i], vz_mw[i])
 
+        if 'pos_sat2' in kwargs:
+
+            x_sag[i] = x_sag[i-2] - h * vx_sag[i-1]
+            y_sag[i] = y_sag[i-2] - h * vy_sag[i-1]
+            z_sag[i] = z_sag[i-2] - h * vz_sag[i-1]
+
+            vx_sag[i] = vx_sag[i-2] - h * ax_sag[i-1]
+            vy_sag[i] = vy_sag[i-2] - h * ay_sag[i-1]
+            vz_sag[i] = vz_sag[i-2] - h * az_sag[i-1]
+
+        pos_hsi, vel_hsi = relative_coordinates(x_lmc[i], y_lmc[i], z_lmc[i], x_mw[i],\
+                                            y_mw[i], z_mw[i], vx_lmc[i], \
+                                            vy_lmc[i], vz_lmc[i], vx_mw[i], \
+                                            vy_mw[i], vz_mw[i])
+
+
+        if 'pos_sat2' in kwargs:
+
+            pos_hs2i, vel_hs2i = relative_coordinates(x_sag[i], y_sag[i], z_sag[i], x_mw[i],\
+                                                    y_mw[i], z_mw[i], vx_sag[i], \
+                                                    vy_sag[i], vz_sag[i], vx_mw[i], \
+                                                    vy_mw[i], vz_mw[i])
+
+
+            pos_ssi, vel_ssi = relative_coordinates(x_sag[i], y_sag[i], z_sag[i], x_lmc[i],\
+                                                    y_lmc[i], z_lmc[i], vx_sag[i], \
+                                                    vy_sag[i], vz_sag[i], vx_lmc[i], \
+                                                    vy_lmc[i], vz_lmc[i])
 
         if (host_move==1):
             x_mw[i] = x_mw[i-2] - 2 * h * vx_mw[i-1]
@@ -373,34 +473,126 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
             vz_mw[i] = vz_mw[i-2] - 2 * h * az_mw[i-1]
 
 
-            pos_i, vel_i = relative_coordinates(x_lmc[i], y_lmc[i],z_lmc[i], x_mw[i],\
+            pos_hsi, vel_hsi= relative_coordinates(x_lmc[i], y_lmc[i],z_lmc[i], x_mw[i],\
                                               y_mw[i], z_mw[i], vx_lmc[i], \
                                               vy_lmc[i], vz_lmc[i], vx_mw[i], \
                                               vy_mw[i], vz_mw[i])
 
-            ax_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[0]
-            ay_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[1]
-            az_mw[i] = acc_host(-pos_i, -vel_i, host_model, sat_model)[2]
+            ax_mw[i], ay_mw[i], az_mw[i] = acc_host(-pos_hsi, -vel_hsi, host_model, sat_model)
+
+
+            if 'pos_sat2' in kwargs:
+
+                ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
+                                                          disk_params, bulge_params, ac, dfric,\
+                                                          alpha, -pos_ss1, -vel_ss1, sat_model2)
+
+                ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
+                                                          disk_params, bulge_params, ac, dfric,\
+                                                          alpha, pos_ssi, vel_ssi, sat_model)
+
+                ax_mw[i], ay_mw[i], az_mw[i] = acc_host(-pos_hsi, -vel_hsi, host_model, sat_model,\
+                                                        -pos_hs2i,-vel_hs2i, sat_model2)
 
 
 
-        ax_lmc[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
-                       ,disk_params, bulge_params, ac, dfric, alpha)[0]
-        ay_lmc[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
-                       ,disk_params, bulge_params, ac, dfric, alpha)[1]
-        az_lmc[i] = acc_sat(pos_i, vel_i, host_model, sat_model\
-                       ,disk_params, bulge_params, ac, dfric, alpha)[2]
+        ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
+                                                  disk_params, bulge_params, ac, dfric,\
+                                                  alpha)
+
+
+        if 'pos_sat2' in kwargs:
+            ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
+                                                      disk_params, bulge_params, ac, dfric,\
+                                                      alpha, -pos_ssi, -vel_ssi, sat_model2)
+
+            ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
+                                                      disk_params, bulge_params, ac, dfric,\
+                                                      alpha, pos_ssi, vel_ssi, sat_model)
+
+
+
+
 
 
     if 'pos_p' in kwargs:
-        x_p, y_p, z_p, vx_p, vy_p, vz_p = integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
-                                          vz_mw, x_lmc, y_lmc, z_lmc, vx_lmc, vy_lmc,\
-                                          vz_lmc, sat_model, host_model, disk_params, \
-                                          bulge_params, pos_p, vel_p, ac, dt, direction)
+        x_p, y_p, z_p, vx_p, vy_p, vz_p = integrate_sat_helper(time,\
+                                                               n_points,\
+                                                               x_mw,\
+                                                               y_mw,\
+                                                               z_mw,\
+                                                               vx_mw,\
+                                                               vy_mw,\
+                                                               vz_mw,\
+                                                               x_lmc,\
+                                                               y_lmc,\
+                                                               z_lmc,\
+                                                               vx_lmc,\
+                                                               vy_lmc,\
+                                                               vz_lmc,\
+                                                               sat_model,\
+                                                               host_model,\
+                                                               disk_params,\
+                                                               bulge_params,\
+                                                               pos_p,\
+                                                               vel_p,\
+                                                               ac, dt,\
+                                                               direction)
 
-        return t, np.array([x_lmc, y_lmc, z_lmc]).T, np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor, \
-               np.array([x_mw, y_mw, z_mw]).T, np.array([vx_mw,vy_mw,vz_mw]).T/conv_factor,\
-               np.array([x_p, y_p, z_p]).T, np.array([vx_p, vy_p, vz_p]).T/conv_factor
+        if 'pos_sat2' in kwargs:
+            x_p, y_p, z_p, vx_p, vy_p, vz_p = integrate_sat_helper(time,\
+                                                                   n_points,\
+                                                                   x_mw,\
+                                                                   y_mw,\
+                                                                   z_mw,\
+                                                                   vx_mw,\
+                                                                   vy_mw,\
+                                                                   vz_mw,\
+                                                                   x_lmc,\
+                                                                   y_lmc,\
+                                                                   z_lmc,\
+                                                                   vx_lmc,\
+                                                                   vy_lmc,\
+                                                                   vz_lmc,\
+                                                                   sat_model,\
+                                                                   host_model,\
+                                                                   disk_params, \
+                                                                   bulge_params,\
+                                                                   pos_p,\
+                                                                   vel_p,\
+                                                                   ac,\
+                                                                   dt,\
+                                                                   direction,\
+                                                                   pos_sat,\
+                                                                   x_sag=x_sag,\
+                                                                   y_sag=y_sag,\
+                                                                   z_sag=z_sag,\
+                                                                   vx_sag=vx_sag,\
+                                                                   vy_sag=vy_sag,\
+                                                                   vz_sag=vz_sag,\
+                                                                   sat_model2=sat_model2)
+
+        if 'pos_sat2' in kwargs:
+
+            return t, np.array([x_lmc, y_lmc, z_lmc]).T,\
+                   np.array([vx_lmc, vy_lmc, \
+                   vz_lmc]).T/conv_factor, np.array([x_mw,\
+                   y_mw, z_mw]).T, np.array([vx_mw,vy_mw,\
+                   vz_mw]).T/conv_factor, np.array([x_p,\
+                   y_p, z_p]).T, np.array([vx_p, vy_p,\
+                   vz_p]).T/conv_factor, np.array([x_sag,\
+                   y_sag, z_sag]), np.array([vx_sag, vy_sag,\
+                   vz_sag])
+
+        else:
+            return t, np.array([x_lmc, y_lmc, z_lmc]).T,\
+                   np.array([vx_lmc, vy_lmc, \
+                   vz_lmc]).T/conv_factor, np.array([x_mw,\
+                   y_mw, z_mw]).T, np.array([vx_mw,vy_mw,\
+                   vz_mw]).T/conv_factor, np.array([x_p,\
+                   y_p, z_p]).T, np.array([vx_p, vy_p,\
+                   vz_p]).T/conv_factor
+
 
     else:
 
@@ -410,8 +602,10 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 def integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
                          vz_mw, x_lmc, y_lmc, z_lmc, vx_lmc, vy_lmc,\
                          vz_lmc, sat_model, host_model, disk_params, \
-                         bulge_params, pos_sat, vel_sat, ac, dt, direction):
+                         bulge_params, pos_sat, vel_sat, ac, dt, direction,\
+                         **kwargs):
 
+    extract(kwargs)
     conv_factor = 1.0227121650537077 # from km/s to Kpc/Gyr
 
     h = dt * direction
@@ -428,18 +622,41 @@ def integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
     vy_p[0] = vel_sat[1]*conv_factor
     vz_p[0] = vel_sat[2]*conv_factor
 
-    pos_p2lmc_0, vel_p2lmc_0 = relative_coordinates(x_p[0], y_p[0], z_p[0],\
-                               x_lmc[0], y_lmc[0], z_lmc[0], vx_p[0], vy_p[0],\
-                               vz_p[0], vx_lmc[0], vy_lmc[0], vz_lmc[0])
+    pos_p2lmc_0, vel_p2lmc_0 = relative_coordinates(x_p[0],\
+                                                    y_p[0],\
+                                                    z_p[0],\
+                                                    x_lmc[0],\
+                                                    y_lmc[0],\
+                                                    z_lmc[0],\
+                                                    vx_p[0],\
+                                                    vy_p[0],\
+                                                    vz_p[0],\
+                                                    vx_lmc[0],\
+                                                    vy_lmc[0],\
+                                                    vz_lmc[0])
 
     pos_p2mw_0, vel_p2mw_0 = relative_coordinates(x_p[0], y_p[0], z_p[0],\
                                x_mw[0], y_mw[0], z_mw[0], vx_p[0], vy_p[0],\
                                vz_p[0], vx_mw[0], vy_mw[0], vz_mw[0])
 
+    if 'pos_sat2' in kwargs:
+
+        pos_p2sag_0, vel_p2sag_0 = relative_coordinates(x_p[0], y_p[0], z_p[0],\
+                                  x_sag[0], y_sag[0], z_sag[0], vx_p[0], vy_p[0],\
+                                  vz_p[0], vx_sag[0], vy_sag[0], vz_sag[0])
+
     ax_p[0], ay_p[0], az_p[0] = particle_acceleration_LMC(pos_p2lmc_0, \
                                                  pos_p2mw_0, sat_model, host_model,\
                                                  disk_params, bulge_params,\
                                                  ac)
+
+    if 'pos_sat2' in kwargs:
+
+        ax_p[0], ay_p[0], az_p[0] = particle_acceleration_LMC(pos_p2lmc_0, \
+                                                    pos_p2mw_0, sat_model, host_model,\
+                                                    disk_params, bulge_params,\
+                                                    ac, pos_sat2 = pos_p2sag_0,\
+                                                    sat_model2=sat_model2)
 
 
     t[1] = t[0] - h
@@ -460,12 +677,24 @@ def integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
                                vz_p[1], vx_mw[1], vy_mw[1], vz_mw[1])
 
 
+    if 'pos_sat2' in kwargs:
+
+        pos_p2sag_1, vel_p2sag_1 = relative_coordinates(x_p[1], y_p[1], z_p[1],\
+                                  x_sag[1], y_sag[1], z_sag[1], vx_p[1], vy_p[1],\
+                                  vz_p[1], vx_sag[1], vy_sag[1], vz_sag[1])
 
     ax_p[1], ay_p[1], az_p[1] = particle_acceleration_LMC(pos_p2lmc_1, \
                                                  pos_p2mw_1, sat_model, host_model,\
                                                  disk_params, bulge_params,\
                                                  ac)
 
+    if 'pos_sat2' in kwargs:
+
+        ax_p[1], ay_p[1], az_p[1] = particle_acceleration_LMC(pos_p2lmc_1, \
+                                                    pos_p2mw_1, sat_model, host_model,\
+                                                    disk_params, bulge_params,\
+                                                     ac, pos_sat2 =pos_p2sag_1,\
+                                                    sat_model2=sat_model2)
 
 
     for i in range(2, len(x_lmc)):
@@ -478,18 +707,62 @@ def integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
         vy_p[i] = vy_p[i-2] - 2 * h * ay_p[i-1]
         vz_p[i] = vz_p[i-2] - 2 * h * az_p[i-1]
 
-        pos_p2lmc_i, vel_p2lmc_i = relative_coordinates(x_p[i],y_p[i], z_p[i],\
-                                   x_lmc[i], y_lmc[i], z_lmc[i], vx_p[i], vy_p[i],\
-                                   vz_p[i], vx_lmc[i], vy_lmc[i], vz_lmc[i])
+        pos_p2lmc_i, vel_p2lmc_i = relative_coordinates(x_p[i],\
+                                                        y_p[i],\
+                                                        z_p[i],\
+                                                        x_lmc[i],\
+                                                        y_lmc[i],\
+                                                        z_lmc[i],\
+                                                        vx_p[i],\
+                                                        vy_p[i],\
+                                                        vz_p[i],\
+                                                        vx_lmc[i],\
+                                                        vy_lmc[i],\
+                                                        vz_lmc[i])
 
-        pos_p2mw_i, vel_p2mw_i = relative_coordinates(x_p[i], y_p[i], z_p[i],\
-                                  x_mw[i], y_mw[i], z_mw[i],vx_p[i], vy_p[i],\
-                                  vz_p[i], vx_mw[i], vy_mw[i], vz_mw[i])
+        pos_p2mw_i, vel_p2mw_i = relative_coordinates(x_p[i],\
+                                                      y_p[i],\
+                                                      z_p[i],\
+                                                      x_mw[i],\
+                                                      y_mw[i],\
+                                                      z_mw[i],\
+                                                      vx_p[i],\
+                                                      vy_p[i],\
+                                                      vz_p[i],\
+                                                      vx_mw[i],\
+                                                      vy_mw[i],\
+                                                      vz_mw[i])
+
+        if 'pos_sat2' in kwargs:
+
+            pos_p2sag_i, vel_p2sag_i = relative_coordinates(x_p[i],\
+                                                            y_p[i],\
+                                                            z_p[i],\
+                                                            x_sag[i],\
+                                                            y_sag[i],\
+                                                            z_sag[i],\
+                                                            vx_p[i],\
+                                                            vy_p[i],\
+                                                            vz_p[i],\
+                                                            vx_sag[i],\
+                                                            vy_sag[i],\
+                                                            vz_sag[i])
 
 
-        ax_p[i], ay_p[i], az_p[i] = particle_acceleration_LMC(pos_p2lmc_i, \
-                                                 pos_p2mw_i, sat_model, host_model,\
-                                                 disk_params, bulge_params,\
-                                                 ac)
+        ax_p[i], ay_p[i], az_p[i] = particle_acceleration_LMC(pos_p2lmc_i,\
+                                                              pos_p2mw_i,\
+                                                              sat_model,\
+                                                              host_model,\
+                                                              disk_params,\
+                                                              bulge_params,\
+                                                              ac)
+
+        if 'pos_sat2' in kwargs:
+
+            ax_p[i], ay_p[i], az_p[i] = particle_acceleration_LMC(pos_p2lmc_i,\
+                                                       pos_p2mw_i, sat_model, host_model,\
+                                                       disk_params, bulge_params,\
+                                                       ac, pos_sat2 =pos_p2sag_i,\
+                                                       sat_model2=sat_model2)
 
     return x_p, y_p, z_p, vx_p/conv_factor, vy_p/conv_factor, vz_p/conv_factor
