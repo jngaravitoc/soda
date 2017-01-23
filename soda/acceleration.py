@@ -37,7 +37,6 @@ def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
 
     M_LMC = sat_model[1] * units.Msun
     r_to_LMC = np.sqrt(xyz_LMC[0]**2.0 + xyz_LMC[1]**2.0 + xyz_LMC[2]**2.0)
-    r_to_sag = np.sqrt(pos_sat2[0]**2.0 + pos_sat2[1]**2.0 + pos_sat2[2]**2.0)
     Ax_LMC, Ay_LMC, Az_LMC = particle_acceleration(M_LMC, xyz_LMC, r_to_LMC)
     Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz_MW, host_model, disk_params, bulge_params, ac)
 
@@ -45,8 +44,9 @@ def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
         M_sag = sat_model2[1]*units.Msun
         r_to_sag = np.sqrt(pos_sat2[0]**2.0 + pos_sat2[1]**2.0 + pos_sat2[2]**2.0)
         Ax_sag, Ay_sag, Az_sag = particle_acceleration(M_sag, pos_sat2, r_to_LMC)
-
-    return Ax_LMC + Ax_MW, Ay_LMC + Ay_MW, Az_LMC + Az_MW
+        return Ax_LMC + Ax_MW+ Ax_sag, Ay_LMC + Ay_MW + Ay_sag, Az_LMC + Az_MW + Az_sag
+    else:
+        return Ax_LMC + Ax_MW, Ay_LMC + Ay_MW, Az_LMC + Az_MW
 
 
 
@@ -158,27 +158,32 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     extract(kwargs)
     if ((r<=Rvir_host) & (dfric==1)):
 
-        Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params, \
+        Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params,\
                                     bulge_params, ac)
 
         #  generalize this to a Hernquist halo as well.
         if dfric==1:
             c_host = host_model[3]
-            a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2], vxyz[0], vxyz[1], \
-                                     xyz[2], M_host, M_sat, Rvir_host, c_host, \
-                                     host_model, M_disk, M_bulge, ac, alpha)
+            a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2],\
+                                     vxyz[0], vxyz[1], xyz[2],\
+                                     M_host, M_sat, Rvir_host,\
+                                     c_host, host_model, M_disk,\
+                                     M_bulge, ac, alpha)
             Ax += a_dfx
             Ay += a_dfy
             Az += a_dfz
 
     #Point like acceleration beyond r_vir
+
     else:
         Ax, Ay, Az = particle_acceleration((M_host + M_disk + \
-                                           M_bulge)*units.Msun, xyz, r)
+                                           M_bulge)*units.Msun,\
+                                           xyz, r)
 
     if 'sat2_model' in kwargs:
         r_sat2 = (xyz2[0]**2.0 + xyz2[1]**2 + xyz2[2]**2)**0.5
-        Ax2, Ay2, Az2 = particle_acceleration(sat2_model[1]*units.Msun, xyz2, r_sat2)
+        Ax2, Ay2, Az2 = particle_acceleration(sat2_model[1]*units.Msun,\
+                                              xyz2, r_sat2)
         return Ax+Ax2, Ay+Ay2, Az+Az2
 
     return Ax, Ay, Az
@@ -236,23 +241,24 @@ def acc_host(xyz, vxyz, host_model, sat_model, **kwargs):
     Az = A_host[2]
 
     extract(kwargs)
+
     if 'sat2_model' in kwargs:
-        if (sat_model2[0] == 'NFW'):
-            c_sat2 = sat_model2[3]
-            M_sat2 = sat_model2[1]
-            Rvir_sat2 = sat_model2[2]
+        if (sat2_model[0] == 'NFW'):
+            c_sat2 = sat2_model[3]
+            M_sat2 = sat2_model[1]
+            Rvir_sat2 = sat2_model[2]
             A_host2 = a_NFWnRvir(c_sat2, xyz2[0], xyz2[1], xyz2[2], \
                                  M_sat2, Rvir_sat2)
 
-        elif (sat_model2[0] == 'hernquist'):
-            M_sat2 = sat_model2[1]
-            rs_sat2 = sat_model2[2]
+        elif (sat2_model[0] == 'hernquist'):
+            M_sat2 = sat2_model[1]
+            rs_sat2 = sat2_model[2]
             A_host2 = a_hernquist(rs_sat2, xyz2[0], xyz2[1], xyz2[2],\
                                   M_sat2)
 
-        elif (sat_model2[0] == 'plummer'):
-            M_sat2 = sat_model2[1]
-            rs_sat2 = sat_model2[2]
+        elif (sat2_model[0] == 'plummer'):
+            M_sat2 = sat2_model[1]
+            rs_sat2 = sat2_model[2]
             A_host2 = a_plummer(rs_sat2, xyz2[0], xyz2[1], xyz2[2],\
                                 M_sat2)
 

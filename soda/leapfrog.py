@@ -64,6 +64,7 @@ def relative_coordinates(x1, y1, z1, x2, y2, z2, vx1, vy1, \
 
     """
     compute relative coordinates.
+
     """
 
     xyz_rel = np.array([x1-x2, y1-y2, z1-z2])
@@ -263,7 +264,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
     t[0] = 0 # Make this an input parameter?
 
 
-    if 'lmc_mode' in kwargs:
+    if 'lmc_model' in kwargs:
         x_lmc[0] = lmc_pos[0]
         y_lmc[0] = lmc_pos[1]
         z_lmc[0] = lmc_pos[2]
@@ -281,12 +282,12 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
     if 'pos_sat2' in kwargs:
         x_sag[0] = pos_sat2[0]
-        y_sag[1] = pos_sat2[1]
-        z_sag[2] = pos_sat2[2]
+        y_sag[0] = pos_sat2[1]
+        z_sag[0] = pos_sat2[2]
 
         vx_sag[0] = vel_sat2[0]*conv_factor
-        vy_sag[1] = vel_sat2[1]*conv_factor
-        vz_sag[2] = vel_sat2[2]*conv_factor
+        vy_sag[0] = vel_sat2[1]*conv_factor
+        vz_sag[0] = vel_sat2[2]*conv_factor
 
     x_mw[0] = pos_host[0]
     y_mw[0] = pos_host[1]
@@ -312,15 +313,15 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
     if 'pos_sat2' in kwargs:
 
         pos_hs20, vel_hs20 = relative_coordinates(x_sag[0], y_sag[0], z_sag[0], x_mw[0],\
-                                                y_mw[0], z_mw[0], vx_sag[0], \
-                                                vy_sag[0], vz_sag[0], vx_mw[0], \
-                                                vy_mw[0], vz_mw[0])
+                                                  y_mw[0], z_mw[0], vx_sag[0], \
+                                                  vy_sag[0], vz_sag[0], vx_mw[0], \
+                                                  vy_mw[0], vz_mw[0])
 
 
         pos_ss0, vel_ss0 = relative_coordinates(x_sag[0], y_sag[0], z_sag[0], x_lmc[0],\
-                                              y_lmc[0], z_lmc[0], vx_sag[0], \
-                                              vy_sag[0], vz_sag[0], vx_lmc[0], \
-                                              vy_lmc[0], vz_lmc[0])
+                                                y_lmc[0], z_lmc[0], vx_sag[0], \
+                                                vy_sag[0], vz_sag[0], vx_lmc[0], \
+                                                vy_lmc[0], vz_lmc[0])
 
     ax_lmc[0],ay_lmc[0], az_lmc[0] = acc_sat(pos_hs0, vel_hs0, host_model, sat_model, \
                                              disk_params, bulge_params, ac, dfric, alpha)
@@ -339,15 +340,29 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                   xyz2=-pos_ss0,\
                                                   sat2_model=sat_model2)
 
-        ax_sag[0], ay_sag[0], az_sag[0] = acc_sat(pos_hs20, vel_hs20, host_model, sat_model2,\
-                                                  disk_params, bulge_params, ac, dfric,\
-                                                  alpha, xyz2=pos_ss0, sat2_model= sat_model)
+        ax_sag[0], ay_sag[0], az_sag[0] = acc_sat(pos_hs20,\
+                                                  vel_hs20,\
+                                                  host_model,\
+                                                  sat_model2,\
+                                                  disk_params,\
+                                                  bulge_params,\
+                                                  ac, dfric,\
+                                                  alpha,\
+                                                  xyz2=pos_ss0,\
+                                                  sat2_model= sat_model)
 
-        ax_mw[0], ay_mw[0], az_mw[0] = acc_host(-pos_hs0, -vel_hs0, host_model, sat_model,\
-                                                xyz2=-pos_hs20, sat2_model=sat_model2)
+        ax_mw[0], ay_mw[0], az_mw[0] = acc_host(-pos_hs0, -vel_hs0,\
+                                                 host_model,\
+                                                 sat_model,\
+                                                 xyz2=-pos_hs20,\
+                                                 sat2_model=sat_model2)
 
     # half step
     # Here I assume the host galaxy starts at position (0, 0, 0) and then its
+
+    print(x_mw[0], y_mw[0], z_mw[0])
+    print(x_lmc[0], y_lmc[0], z_lmc[0])
+    print(x_sag[0], y_sag[0], z_sag[0])
 
     # initial v[1] is (0, 0, 0)
     t[1] = t[0] - h
@@ -417,21 +432,27 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                       alpha, xyz2=pos_ss1, sat2_model= sat_model)
 
             ax_mw[1], ay_mw[1], az_mw[1] = acc_host(-pos_hs1, -vel_hs1, host_model, sat_model,\
-                                                    -pos_hs21,-vel_hs21, sat2_model=sat_model2)
+                                                     xyz2=-pos_hs21, sat2_model=sat_model2)
 
 
-    ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model\
-                                              ,disk_params, bulge_params, ac, dfric, alpha)
+    ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1,\
+                                              host_model,\
+                                              sat_model,disk_params,\
+                                              bulge_params, ac,\
+                                              dfric, alpha)
 
 
     if 'pos_sat2' in kwargs:
+
+
         ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model,\
                                                   disk_params, bulge_params, ac, dfric,\
-                                                  alpha, -pos_ss1, -vel_ss1, sat_model2)
+                                                  alpha, xyz2=-pos_ss1, sat2_model= sat_model2)
 
-        ax_sag[1], ay_sag[1], az_sag[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model2,\
+        ax_sag[1], ay_sag[1], az_sag[1] = acc_sat(pos_hs21, vel_hs21, host_model, sat_model2,\
                                                   disk_params, bulge_params, ac, dfric,\
-                                                  alpha, pos_ss1, vel_ss1, sat_model)
+                                                  alpha, xyz2=pos_ss1, sat2_model= sat_model)
+    print('done t=1')
 
     for i in range(2, len(x_lmc)):
         t[i] = t[i-1] - h
@@ -455,17 +476,17 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
             vz_sag[i] = vz_sag[i-2] - h * az_sag[i-1]
 
         pos_hsi, vel_hsi = relative_coordinates(x_lmc[i], y_lmc[i], z_lmc[i], x_mw[i],\
-                                            y_mw[i], z_mw[i], vx_lmc[i], \
-                                            vy_lmc[i], vz_lmc[i], vx_mw[i], \
-                                            vy_mw[i], vz_mw[i])
+                                                y_mw[i], z_mw[i], vx_lmc[i], \
+                                                vy_lmc[i], vz_lmc[i], vx_mw[i], \
+                                                vy_mw[i], vz_mw[i])
 
 
         if 'pos_sat2' in kwargs:
 
             pos_hs2i, vel_hs2i = relative_coordinates(x_sag[i], y_sag[i], z_sag[i], x_mw[i],\
-                                                    y_mw[i], z_mw[i], vx_sag[i], \
-                                                    vy_sag[i], vz_sag[i], vx_mw[i], \
-                                                    vy_mw[i], vz_mw[i])
+                                                      y_mw[i], z_mw[i], vx_sag[i], \
+                                                      vy_sag[i], vz_sag[i], vx_mw[i], \
+                                                      vy_mw[i], vz_mw[i])
 
 
             pos_ssi, vel_ssi = relative_coordinates(x_sag[i], y_sag[i], z_sag[i], x_lmc[i],\
@@ -483,10 +504,10 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
             vz_mw[i] = vz_mw[i-2] - 2 * h * az_mw[i-1]
 
 
-            pos_hsi, vel_hsi= relative_coordinates(x_lmc[i], y_lmc[i],z_lmc[i], x_mw[i],\
-                                              y_mw[i], z_mw[i], vx_lmc[i], \
-                                              vy_lmc[i], vz_lmc[i], vx_mw[i], \
-                                              vy_mw[i], vz_mw[i])
+            pos_hsi, vel_hsi= relative_coordinates(x_lmc[i], y_lmc[i], z_lmc[i], x_mw[i],\
+                                                   y_mw[i], z_mw[i], vx_lmc[i], \
+                                                   vy_lmc[i], vz_lmc[i], vx_mw[i], \
+                                                   vy_mw[i], vz_mw[i])
 
             ax_mw[i], ay_mw[i], az_mw[i] = acc_host(-pos_hsi, -vel_hsi, host_model, sat_model)
 
@@ -495,14 +516,16 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
                 ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
                                                           disk_params, bulge_params, ac, dfric,\
-                                                          alpha, -pos_ss1, -vel_ss1, sat_model2)
+                                                          alpha, xyz2= -pos_ss1, sat2_model = sat_model2)
 
                 ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
                                                           disk_params, bulge_params, ac, dfric,\
-                                                          alpha, pos_ssi, vel_ssi, sat_model)
+                                                          alpha,\
+                                                          xyz2=pos_ssi,\
+                                                          sat2_model=sat_model)
 
                 ax_mw[i], ay_mw[i], az_mw[i] = acc_host(-pos_hsi, -vel_hsi, host_model, sat_model,\
-                                                        -pos_hs2i,-vel_hs2i, sat_model2)
+                                                        xyz2=-pos_hs2i,sat2_model=sat_model2)
 
 
 
@@ -514,11 +537,11 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         if 'pos_sat2' in kwargs:
             ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
                                                       disk_params, bulge_params, ac, dfric,\
-                                                      alpha, -pos_ssi, -vel_ssi, sat_model2)
+                                                      alpha, xyz2=-pos_ssi, sat2_model= sat_model2)
 
             ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
                                                       disk_params, bulge_params, ac, dfric,\
-                                                      alpha, pos_ssi, vel_ssi, sat_model)
+                                                      alpha, xyz2=pos_ssi, sat2_model=sat_model)
 
 
 
@@ -573,7 +596,6 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                                    ac,\
                                                                    dt,\
                                                                    direction,\
-                                                                   pos_sat,\
                                                                    x_sag=x_sag,\
                                                                    y_sag=y_sag,\
                                                                    z_sag=z_sag,\
@@ -585,29 +607,29 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         if 'pos_sat2' in kwargs:
 
             return t, np.array([x_lmc, y_lmc, z_lmc]).T,\
-                   np.array([vx_lmc, vy_lmc, \
-                   vz_lmc]).T/conv_factor, np.array([x_mw,\
-                   y_mw, z_mw]).T, np.array([vx_mw,vy_mw,\
-                   vz_mw]).T/conv_factor, np.array([x_p,\
-                   y_p, z_p]).T, np.array([vx_p, vy_p,\
-                   vz_p]).T/conv_factor, np.array([x_sag,\
-                   y_sag, z_sag]), np.array([vx_sag, vy_sag,\
-                   vz_sag])
+                   np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor,\
+                   np.array([x_mw, y_mw, z_mw]).T,\
+                   np.array([vx_mw,vy_mw, vz_mw]).T/conv_factor,\
+                   np.array([x_p, y_p, z_p]).T,\
+                   np.array([vx_p, vy_p,vz_p]).T/conv_factor,\
+                   np.array([x_sag, y_sag, z_sag]).T,\
+                   np.array([vx_sag, vy_sag,vz_sag]).T/conv_factor
 
         else:
             return t, np.array([x_lmc, y_lmc, z_lmc]).T,\
-                   np.array([vx_lmc, vy_lmc, \
-                   vz_lmc]).T/conv_factor, np.array([x_mw,\
-                   y_mw, z_mw]).T, np.array([vx_mw,vy_mw,\
-                   vz_mw]).T/conv_factor, np.array([x_p,\
-                   y_p, z_p]).T, np.array([vx_p, vy_p,\
-                   vz_p]).T/conv_factor
+                   np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor,\
+                   np.array([x_mw, y_mw, z_mw]).T,\
+                   np.array([vx_mw,vy_mw, vz_mw]).T/conv_factor,\
+                   np.array([x_p, y_p, z_p]).T,\
+                   np.array([vx_p, vy_p, vz_p]).T/conv_factor
 
 
     else:
 
-        return t, np.array([x_lmc, y_lmc, z_lmc]).T, np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor, \
-               np.array([x_mw, y_mw, z_mw]).T, np.array([vx_mw,vy_mw,vz_mw]).T/conv_factor
+        return t, np.array([x_lmc, y_lmc, z_lmc]).T,\
+               np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor, \
+               np.array([x_mw, y_mw, z_mw]).T, \
+               np.array([vx_mw,vy_mw,vz_mw]).T/conv_factor
 
 def integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
                          vz_mw, x_lmc, y_lmc, z_lmc, vx_lmc, vy_lmc,\
