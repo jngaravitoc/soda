@@ -42,7 +42,7 @@ def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
     Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz_MW, host_model, disk_params, bulge_params, ac)
 
     if 'pos_sat2' in kwargs:
-        M_sag = sat_model2[1] * units.Msun
+        M_sag = sat_model2[1]*units.Msun
         r_to_sag = np.sqrt(pos_sat2[0]**2.0 + pos_sat2[1]**2.0 + pos_sat2[2]**2.0)
         Ax_sag, Ay_sag, Az_sag = particle_acceleration(M_sag, pos_sat2, r_to_LMC)
 
@@ -177,8 +177,8 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
                                            M_bulge)*units.Msun, xyz, r)
 
     if 'sat2_model' in kwargs:
-        r_sat2 = (xyz2[:,0]**2.0 + xyz[:,1]**2 + xyz[:,2]**2)**0.5
-        Ax2, Ay2, Az2 = particle_acceleration(sat2_model[1], xyz2, r_sat2)
+        r_sat2 = (xyz2[0]**2.0 + xyz2[1]**2 + xyz2[2]**2)**0.5
+        Ax2, Ay2, Az2 = particle_acceleration(sat2_model[1]*units.Msun, xyz2, r_sat2)
         return Ax+Ax2, Ay+Ay2, Az+Az2
 
     return Ax, Ay, Az
