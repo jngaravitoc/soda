@@ -360,9 +360,9 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
     # half step
     # Here I assume the host galaxy starts at position (0, 0, 0) and then its
 
-    print(x_mw[0], y_mw[0], z_mw[0])
-    print(x_lmc[0], y_lmc[0], z_lmc[0])
-    print(x_sag[0], y_sag[0], z_sag[0])
+    print('Host: ', x_mw[0], y_mw[0], z_mw[0])
+    print('Satellite 1 :' , x_lmc[0], y_lmc[0], z_lmc[0])
+
 
     # initial v[1] is (0, 0, 0)
     t[1] = t[0] - h
@@ -376,6 +376,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
     if 'pos_sat2' in kwargs:
 
+        print('Satellite 2: ', x_sag[0], y_sag[0], z_sag[0])
         x_sag[1] = x_sag[0] - h * vx_sag[0]
         y_sag[1] = y_sag[0] - h * vy_sag[0]
         z_sag[1] = z_sag[0] - h * vz_sag[0]
