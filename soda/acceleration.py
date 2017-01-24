@@ -43,8 +43,8 @@ def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
     if 'pos_sat2' in kwargs:
         M_sag = sat_model2[1]*units.Msun
         r_to_sag = np.sqrt(pos_sat2[0]**2.0 + pos_sat2[1]**2.0 + pos_sat2[2]**2.0)
-        Ax_sag, Ay_sag, Az_sag = particle_acceleration(M_sag, pos_sat2, r_to_LMC)
-        return Ax_LMC + Ax_MW+ Ax_sag, Ay_LMC + Ay_MW + Ay_sag, Az_LMC + Az_MW + Az_sag
+        Ax_sag, Ay_sag, Az_sag = particle_acceleration(M_sag, pos_sat2, r_to_sag)
+        return Ax_LMC + Ax_MW + Ax_sag, Ay_LMC + Ay_MW + Ay_sag, Az_LMC + Az_MW + Az_sag
     else:
         return Ax_LMC + Ax_MW, Ay_LMC + Ay_MW, Az_LMC + Az_MW
 
@@ -84,8 +84,8 @@ def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac,
             c_host = host_model[3]
             ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2],\
                                M_host, Rvir_host)
-        elif (host_model[0] == 'hernquist'):
 
+        elif (host_model[0] == 'hernquist'):
             rs_host = host_model[2]
             ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
                                 M_host)
