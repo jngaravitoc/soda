@@ -184,7 +184,9 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
         r_sat2 = (xyz2[0]**2.0 + xyz2[1]**2 + xyz2[2]**2)**0.5
         Ax2, Ay2, Az2 = particle_acceleration(sat2_model[1]*units.Msun,\
                                               xyz2, r_sat2)
-        return Ax+Ax2, Ay+Ay2, Az+Az2
+        Ax+=Ax2
+        Ay+=Ay2
+        Az+=Az2
 
     return Ax, Ay, Az
 
