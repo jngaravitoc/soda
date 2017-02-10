@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 
 """
+
 The output units are as follows:
 M = [Msun]
 rho = [Msun / kpc3]
-potential = 
+potential = [kpc^s / s^2]
 Circular velocity = [km/s]
 acceleration = [kpc/Gyr2]
+
+
 """
 
 import numpy as np
@@ -16,7 +19,7 @@ from astropy import units
 from .cosmotools import *
 
 
-# G is defined in cosmotools in units of kpc^2/Msun/s^2
+# G is defined in cosmotools in units of kpc^3/Msun/s^2
 
 K = constants.k_B
 K = K.to(units.Msun * units.kpc**2 / (units.s**2 * units.Kelvin))
@@ -421,6 +424,7 @@ def pot_LMJ(r_h, q1, q2, qz, phi, x, y, z, v):
        v = v.to(units.kpc / units.s)
        C1, C2, C3 = constants_LMJ(q1, q2, qz, phi)
        phi = v**2 * np.log(C1*x**2 + C2*y**2 + C3*x*y + (z/qz)**2 + r_h**2)
+       phi = phi.to(units.kpc**2/units.s**2)
        return phi.value
 
 def vc_LMJ(r_h, q1, q2, qz, phi, x, y, z, v):
@@ -473,13 +477,114 @@ factor)
 
 #+++++++++++++++++++++++++Vera-Ciro-Helmi++++++++++++++++++++++++++++++++++++++++++++++
 
-def pot_VCH(d, q1, q2, q3, qz, phi, ra, x, y, z, v):
-    c1, c2, c3 = constants_LMJ(q1, q2, q3, phi)
-    rA = np.sqrt(x**2 + y**2 + z**2/qz**2)
-    rT = np.sqrt(c1*x**2 + c2*y**2 + c3*x*y + z**2/q3**2)
-    r = (ra + rT)*rA / (ra + rA)
-    pot = v**2 * log(r**2 + d**2)
-    return pot
 
-def vc_VCH():
-    vc = np.sqrt((2 * r**2 * v**2 / (r**2 + d**2)) * np.sqrt(drdx**2 + drdy**2 + drdz**2))
+
+def constants_VC(x, y, z, phi, q1, q2):
+    a1 = np.cos(phi)
+    a2 = np.sin(phi)
+    C1 = a1**2/q1**2 + a2**2/q2**2
+    C2 = a1**2/q2**2 + a2**2/q1**2
+    C3 = 2*a1*a2*(1/q1**2 - 1/q2**2)
+    return C1, C2, C3
+
+
+def VeraCiro13_pot(x, y, z, v_halo, phi, q1, q2, q3, qz, d, r_a):
+    """
+    VeraCiro potential: see \S2.1 of 
+    http://adsabs.harvard.edu/abs/2013ApJ...773L...4V
+
+    Input:
+    ======
+    x, y, z in kpc
+    v_halo in km/s
+    phi in degrees.
+    q1, q2, q3, qz. constants
+    d in kpc
+    r_a in kpc
+
+    Output:
+    =======
+    pot [km^2/s^2]
+
+    """
+
+    phi = phi * np.pi/180. # in radians
+    C1, C2, C3 = constants_VC(x, y, z, phi, q1, q2)
+    r_A = (x**2 + y**2 +z**2/qz**2)**0.5
+    r_T = (C1*x**2 + C2*y**2 + C3*x*y + z**2/q3**2)**0.5
+    r_til = r_A*(r_a + r_T)/(r_a + r_A)
+    pot = (v_halo*u.km/u.s)**2 * np.log(r_til**2 + d**2)
+    pot.to(units.kpc**2/units.s**2)
+    return pot.value
+
+
+def VeraCiro13_acc(x, y, z, v_halo, phi, q1, q2, q3, qz, d, r_a):
+
+    """
+    Cartessian acceleration of the VeraCiro13 potential.
+
+    return acceleration in kpc/gyr^2
+
+
+    """
+
+    x = x * units.kpc
+    y = y * units.kpc
+    z = z * units.kpc
+    v_halo = va_halo *  units.km/units.s
+    d = d * units.kpc
+
+
+    C1, C2, C3 = constants_VC(x, y, z, phi, q1, q2)
+    r_A = (x**2 + y**2 +z**2/qz**2)**0.5
+    r_T = (C1*x**2 + C2*y**2 + C3*x*y + z**2/q3**2)**0.5
+    r_til = r_A*(r_a + r_T)/(r_a + r_A)
+
+    dr_dx = (((r_a*x/r_A + r_A*(2*C1*x + C3*y)/(2*r_T)) +\
+            r_T*x/r_A)*(r_a + r_A) - x*(r_a+r_T)/r_A)/\
+            (r_a + r_A)**2.0
+
+    dr_dy = (((r_a*y/r_A + r_A*(2*C2*y + C3*x)/(2*r_T)) +\
+            r_T*y/r_A)*(r_a + r_A)- y*(r_a+r_T)/r_A) /\
+            (r_a + r_A)**2.0
+
+    dr_dz = (((r_a*z/(q_z**2*r_A) + r_A*z/(r_T*q_3**2)) +\
+            r_T*z/(r_A*q_z**2))*(r_a + r_A)\
+            - z*(r_a+r_T)/(r_A*q_z**2)) / (r_a + r_A)**2.0
+
+    ax = -2*v_halo**2 * r_til / (r_til**2 + d**2)  * dr_dx
+    ay = -2*v_halo**2 * r_til / (r_til**2 + d**2)  * dr_dy
+    az = -2*v_halo**2 * r_til / (r_til**2 + d**2)  * dr_dz
+
+    ax = ax.to(units.kpc/units.Gyr**2)
+    ay = ay.to(units.kpc/units.Gyr**2)
+    az = az.to(units.kpc/units.Gyr**2)
+
+    return ax.value, ay.value, az.value
+
+
+def VeraCiro13_vc(x, y, z, v_halo, phi, q1, q2, q3, qz, d, r_a):
+
+    """
+    input:
+    x in kpc
+    y in kpc
+    z in kpc
+    v_halo in km/s
+    phi in degrees
+    q1, q2, q3, qz
+    d in kpc
+    r_a in kpc
+    return the rotational verlocity In km/s
+    """
+
+    C1, C2, C3 = constants_VC(x, y, z, phi, q1, q2)
+    r_A = (x**2 + y**2 +z**2/qz**2)**0.5
+    r_T = (C1*x**2 + C2*y**2 + C3*x*y + z**2/q3**2)**0.5
+    r_til = r_A*(r_a + r_T)/(r_a + r_A)
+    vc = v_halo * r_til * (2 / (r_til**2 + d**2))**0.5
+    return vc
+
+
+#def vc_VCH():
+#    vc = np.sqrt((2 * r**2 * v**2 / (r**2 + d**2)) * np.sqrt(drdx**2 + drdy**2 + drdz**2))

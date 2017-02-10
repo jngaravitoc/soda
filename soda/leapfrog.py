@@ -234,6 +234,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
     1. Generalize for N satellites.
     2. Integrate with galpy/gala
     3. Used in arbitrary accelerations/SCF
+
     """
 
     extract(kwargs)
@@ -249,6 +250,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         sat_model2 = satellite_model2
 
     conv_factor = 1.0227121650537077 # from km/s to Kpc/Gyr
+
     # h is the time step
     h = dt * direction
     n_points = int(time / dt) # Make this an input parameter!
@@ -323,8 +325,8 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                 vy_sag[0], vz_sag[0], vx_lmc[0], \
                                                 vy_lmc[0], vz_lmc[0])
 
-    ax_lmc[0],ay_lmc[0], az_lmc[0] = acc_sat(pos_hs0, vel_hs0, host_model, sat_model, \
-                                             disk_params, bulge_params, ac, dfric, alpha)
+    ax_lmc[0], ay_lmc[0], az_lmc[0] = acc_sat(pos_hs0, vel_hs0, host_model, sat_model, \
+                                              disk_params, bulge_params, ac, dfric, alpha)
 
     ax_mw[0], ay_mw[0], az_mw[0] = acc_host(-pos_hs0, -vel_hs0, host_model, sat_model)
 
@@ -451,8 +453,6 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
 
     if 'pos_sat2' in kwargs:
-
-
         ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model,\
                                                   disk_params, bulge_params, ac, dfric,\
                                                   alpha, xyz2=-pos_ss1, sat2_model= sat_model2)
@@ -460,7 +460,6 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         ax_sag[1], ay_sag[1], az_sag[1] = acc_sat(pos_hs21, vel_hs21, host_model, sat_model2,\
                                                   disk_params, bulge_params, ac, dfric,\
                                                   alpha, xyz2=pos_ss1, sat2_model= sat_model)
-    print('done t=1')
 
     for i in range(2, len(x_lmc)):
         t[i] = t[i-1] - h
