@@ -82,8 +82,8 @@ def extract(dct, namespace=None):
 
 
 
-def integrate_mw(time, pos_p, vel_p, host_model, disk_params,\
-                 bulge_params, ac=0, direction=1, dt=0.01, **kwargs):
+def integrate_mw(time, pos_p, vel_p, \
+                 host_model, direction=1, dt=0.01, ac=0, **kwargs):
 
 # kwargs: pos_p, vel_p
 
@@ -143,12 +143,6 @@ def integrate_mw(time, pos_p, vel_p, host_model, disk_params,\
     vy_p[0] = vel_p[1]*conv_factor
     vz_p[0] = vel_p[2]*conv_factor
 
-
-
-    ax_p[0], ay_p[0], az_p[0] = acc_sat_helper([x_p[0],\
-                                y_p[0],z_p[0]], host_model,\
-                                disk_params, bulge_params, ac)
-
     # half step
     # Here I assume the host galaxy starts at position (0, 0, 0) and then its
 
@@ -164,10 +158,16 @@ def integrate_mw(time, pos_p, vel_p, host_model, disk_params,\
     vz_p[1] = vz_p[0] - h * az_p[0]
 
 
+    if ('disk_params' and 'bulge_params') in kwargs:
+        ax_p[1], ay_p[1], az_p[1] = acc_sat_helper([x_p[1],\
+                                    y_p[1],z_p[1]], host_model, ac,\
+                                    disk_params=disk_params, \
+                                    bulge_params=bulge_params)
+
 
     ax_p[1], ay_p[1], az_p[1] = acc_sat_helper([x_p[1],\
-                                y_p[1],z_p[1]], host_model,\
-                                disk_params, bulge_params, ac)
+                                y_p[1],z_p[1]], host_model, ac)
+
 
     for i in range(2, len(x_p)):
         t[i] = t[i-1] - h
@@ -180,10 +180,14 @@ def integrate_mw(time, pos_p, vel_p, host_model, disk_params,\
         vy_p[i] = vy_p[i-2] - 2 * h * ay_p[i-1]
         vz_p[i] = vz_p[i-2] - 2 * h * az_p[i-1]
 
-        ax_p[i], ay_p[i], az_p[i] = acc_sat_helper([x_p[i],\
-                                    y_p[i],z_p[i]], host_model,\
-                                    disk_params, bulge_params, ac)
+        if ('disk_params' and 'bulge_params') in kwargs:
+            ax_p[i], ay_p[i], az_p[i] = acc_sat_helper([x_p[i],\
+                                        y_p[i],z_p[i]], host_model, ac,\
+                                        disk_params=disk_params, \
+                                        bulge_params=bulge_params)
 
+        ax_p[i], ay_p[i], az_p[i] = acc_sat_helper([x_p[i],\
+                                    y_p[i],z_p[i]], host_model, ac)
 
     return t, np.array([x_p, y_p, z_p]).T, np.array([vx_p, vy_p, vz_p]).T/conv_factor
 

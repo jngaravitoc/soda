@@ -38,7 +38,8 @@ def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
     M_LMC = sat_model[1] * units.Msun
     r_to_LMC = np.sqrt(xyz_LMC[0]**2.0 + xyz_LMC[1]**2.0 + xyz_LMC[2]**2.0)
     Ax_LMC, Ay_LMC, Az_LMC = particle_acceleration(M_LMC, xyz_LMC, r_to_LMC)
-    Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz_MW, host_model, disk_params, bulge_params, ac)
+    Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz_MW, host_model, ac,
+                                         disk_params=disk_params, bulge_params=bulge_params)
 
     if 'pos_sat2' in kwargs:
         M_sag = sat_model2[1]*units.Msun
@@ -65,20 +66,30 @@ def particle_acceleration(Mtot, xyz, r):
     return Ax, Ay, Az
 
 
-def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac,
+def acc_sat_helper(xyz, host_model, ac,
                    **kwargs):
     """
     Computes the acceleration of a particle inside a given MW model.
     """
 
-    M_disk, a_disk, b_disk = disk_params
-    M_bulge, rh = bulge_params
+    extract(kwargs)
+
+    if 'disk_params' in kwargs:
+        M_disk, a_disk, b_disk = disk_params
+
+    if 'bulge_params' in kwargs:
+        M_bulge, rh = bulge_params
+
     M_host = host_model[1]
+
+
 
     if (ac == 1):
        print('No ac yet!')
        #ahalo = acc_ac(x, y, z)
+
     else:
+
         if (host_model[0] == 'NFW'):
             Rvir_host = host_model[2]
             c_host = host_model[3]
@@ -89,13 +100,22 @@ def acc_sat_helper(xyz, host_model, disk_params, bulge_params, ac,
             rs_host = host_model[2]
             ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
                                 M_host)
+    Ax = ahalo[0]
+    Ay = ahalo[1]
+    Az = ahalo[2]
 
-    adisk = a_mn(a_disk, b_disk, xyz[0], xyz[1], xyz[2], M_disk)
-    abulge = a_hernquist(rh, xyz[0], xyz[1], xyz[2], M_bulge)
 
-    Ax = ahalo[0] + adisk[0] + abulge[0]
-    Ay = ahalo[1] + adisk[1] + abulge[1]
-    Az = ahalo[2] + adisk[2] + abulge[2]
+    if 'disk_params' in kwargs:
+        adisk = a_mn(a_disk, b_disk, xyz[0], xyz[1], xyz[2], M_disk)
+        Ax += adisk[0]
+        Ay += adisk[1]
+        Az += adisk[2]
+
+    if 'bulge_params' in kwargs:
+        abulge = a_hernquist(rh, xyz[0], xyz[1], xyz[2], M_bulge)
+        Ax += abulge[0]
+        Ay += abulge[1]
+        Az += abulge[2]
 
     extract(kwargs)
 
@@ -158,13 +178,18 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     extract(kwargs)
     if ((r<=Rvir_host) & (dfric==1)):
 
-        Ax, Ay, Az = acc_sat_helper(xyz, host_model, disk_params,\
-                                    bulge_params, ac)
+        Ax, Ay, Az = acc_sat_helper(xyz, host_model, ac, disk_params=disk_params,\
+                                    bulge_params=bulge_params)
+
+
+
 
         #  generalize this to a Hernquist halo as well.
         if dfric==1:
             c_host = host_model[3]
             a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2],\
+
+
                                      vxyz[0], vxyz[1], xyz[2],\
                                      M_host, M_sat, Rvir_host,\
                                      c_host, host_model, M_disk,\
