@@ -18,6 +18,7 @@ def LMC_models(model):
     LMC_Ms = [3E10, 5E10, 8E10, 1E11, 1.8E11, 2.5E11]
     LMC_as = [3.0, 6.4, 10.4, 12.7, 20, 25.2]
 
+    #LMC_as = [8.0, 11, 14, 15, 20, 22.5]
 
     if model == 'LMC1':
         LMC_model = ['hernquist', LMC_Ms[0], LMC_as[0] ,0]
@@ -397,6 +398,11 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                             vy_mw[1], vz_mw[1])
 
 
+    ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1,\
+                                              host_model,\
+                                              sat_model,disk_params,\
+                                              bulge_params, ac,\
+                                              dfric, alpha)
     if 'pos_sat2' in kwargs:
 
         pos_hs21, vel_hs21 = relative_coordinates(x_sag[1], y_sag[1], z_sag[1], x_mw[1],\
@@ -427,6 +433,11 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
         ax_mw[1], ay_mw[1], az_mw[1] = acc_host(-pos_hs1, -vel_hs1, host_model, sat_model)
 
+        ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1,\
+                                                 host_model,\
+                                                 sat_model,disk_params,\
+                                                 bulge_params, ac,\
+                                                 dfric, alpha)
 
         if 'pos_sat2' in kwargs:
 
@@ -448,12 +459,12 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                      xyz2=-pos_hs21, sat2_model=sat_model2)
 
 
-    if 'pos_sat2' not in kwargs:
-        ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1,\
-                                                 host_model,\
-                                                 sat_model,disk_params,\
-                                                 bulge_params, ac,\
-                                                 dfric, alpha)
+#    if 'pos_sat2' not in kwargs:
+#        ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1,\
+#                                                 host_model,\
+#                                                 sat_model,disk_params,\
+#                                                 bulge_params, ac,\
+#                                                 dfric, alpha)
 
 
     if 'pos_sat2' in kwargs:
@@ -509,6 +520,13 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                     vy_sag[i], vz_sag[i], vx_lmc[i], \
                                                     vy_lmc[i], vz_lmc[i])
 
+            ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
+                                                      disk_params, bulge_params, ac, dfric,\
+                                                      alpha, xyz2=-pos_ssi, sat2_model= sat_model2)
+
+            ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
+                                                      disk_params, bulge_params, ac, dfric,\
+                                                      alpha, xyz2=pos_ssi, sat2_model=sat_model)
         if (host_move==1):
             x_mw[i] = x_mw[i-2] - 2 * h * vx_mw[i-1]
             y_mw[i] = y_mw[i-2] - 2 * h * vy_mw[i-1]
@@ -551,21 +569,6 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
                 ax_mw[i], ay_mw[i], az_mw[i] = acc_host(-pos_hsi, -vel_hsi, host_model, sat_model,\
                                                         xyz2=-pos_hs2i,sat2_model=sat_model2)
-
-
-
-
-        if 'pos_sat2' in kwargs:
-            ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
-                                                      disk_params, bulge_params, ac, dfric,\
-                                                      alpha, xyz2=-pos_ssi, sat2_model= sat_model2)
-
-            ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
-                                                      disk_params, bulge_params, ac, dfric,\
-                                                      alpha, xyz2=pos_ssi, sat2_model=sat_model)
-
-
-
 
 
 
