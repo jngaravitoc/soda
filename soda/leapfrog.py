@@ -526,6 +526,9 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
             ax_mw[i], ay_mw[i], az_mw[i] = acc_host(-pos_hsi, -vel_hsi, host_model, sat_model)
 
+            ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
+                                                      disk_params, bulge_params, ac, dfric,\
+                                                      alpha)
 
             if 'pos_sat2' in kwargs:
 
