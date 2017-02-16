@@ -222,6 +222,10 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
     host_move (optional, default=1): No(0), Yes(1)
     direction (optional, default=1): Forward -1, Backwards=1
     dt: Time step for the integration (default dt=0.01 Gyrs)
+    kwargs:
+    alpha2 a different df parameter for the LMC.
+    lmc
+
     Output:
     ------
 
@@ -244,6 +248,8 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
     extract(kwargs)
 
+    if 'alpha2' not in kwargs:
+        alpha2=alpha
 
     if 'lmc_model' in kwargs:
         print('using the ', lmc_model)
@@ -354,7 +360,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                   disk_params,\
                                                   bulge_params,\
                                                   ac, dfric,\
-                                                  alpha,\
+                                                  alpha2,\
                                                   xyz2=pos_ss0,\
                                                   sat2_model= sat_model)
 
@@ -453,7 +459,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
             ax_sag[1], ay_sag[1], az_sag[1] = acc_sat(pos_hs21, vel_hs21, host_model, sat_model2,\
                                                       disk_params, bulge_params, ac, dfric,\
-                                                      alpha, xyz2=pos_ss1, sat2_model= sat_model)
+                                                      alpha2, xyz2=pos_ss1, sat2_model= sat_model)
 
             ax_mw[1], ay_mw[1], az_mw[1] = acc_host(-pos_hs1, -vel_hs1, host_model, sat_model,\
                                                      xyz2=-pos_hs21, sat2_model=sat_model2)
@@ -474,7 +480,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
         ax_sag[1], ay_sag[1], az_sag[1] = acc_sat(pos_hs21, vel_hs21, host_model, sat_model2,\
                                                   disk_params, bulge_params, ac, dfric,\
-                                                  alpha, xyz2=pos_ss1, sat2_model= sat_model)
+                                                  alpha2, xyz2=pos_ss1, sat2_model= sat_model)
 
     for i in range(2, len(x_lmc)):
         t[i] = t[i-1] - h
@@ -526,7 +532,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
             ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
                                                       disk_params, bulge_params, ac, dfric,\
-                                                      alpha, xyz2=pos_ssi, sat2_model=sat_model)
+                                                      alpha2, xyz2=pos_ssi, sat2_model=sat_model)
         if (host_move==1):
             x_mw[i] = x_mw[i-2] - 2 * h * vx_mw[i-1]
             y_mw[i] = y_mw[i-2] - 2 * h * vy_mw[i-1]
@@ -563,7 +569,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
                 ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
                                                           disk_params, bulge_params, ac, dfric,\
-                                                          alpha,\
+                                                          alpha2,\
                                                           xyz2=pos_ssi,\
                                                           sat2_model=sat_model)
 
