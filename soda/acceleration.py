@@ -117,7 +117,6 @@ def acc_sat_helper(xyz, host_model, ac,
         Ay += abulge[1]
         Az += abulge[2]
 
-    extract(kwargs)
 
     if 'sat2' in kwargs:
         ax_s2, ay_s2, az_s2 = particle_acceleration(Msat2, xyzrs1rs2, rs1s2)
@@ -160,6 +159,8 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
     """
 
+    extract(kwargs)
+
     r = np.sqrt(xyz[0]**2 + xyz[1]**2 + xyz[2]**2)
 
     # Host & Satellite models & parameters
@@ -175,7 +176,6 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
     # Acceleration by the DM halo profile
 
-    extract(kwargs)
     if ((r<=Rvir_host) & (dfric==1)):
 
         Ax, Ay, Az = acc_sat_helper(xyz, host_model, ac, disk_params=disk_params,\
@@ -194,9 +194,9 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
                                      M_host, M_sat, Rvir_host,\
                                      c_host, host_model, M_disk,\
                                      M_bulge, ac, alpha)
-            Ax += a_dfx
-            Ay += a_dfy
-            Az += a_dfz
+            Ax+=a_dfx
+            Ay+=a_dfy
+            Az+=a_dfz
 
     #Point like acceleration beyond r_vir
 
@@ -208,7 +208,7 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
     if 'sat2_model' in kwargs:
         r_sat2 = (xyz2[0]**2.0 + xyz2[1]**2 + xyz2[2]**2)**0.5
         Ax2, Ay2, Az2 = particle_acceleration(sat2_model[1]*units.Msun,\
-                                              xyz2, r_sat2)
+                         xyz2, r_sat2)
         Ax+=Ax2
         Ay+=Ay2
         Az+=Az2
