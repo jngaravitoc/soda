@@ -588,3 +588,124 @@ def VeraCiro13_vc(x, y, z, v_halo, phi, q1, q2, q3, qz, d, r_a):
 
 #def vc_VCH():
 #    vc = np.sqrt((2 * r**2 * v**2 / (r**2 + d**2)) * np.sqrt(drdx**2 + drdy**2 + drdz**2))
+
+
+
+
+#+++++++++++++++++++++++++ Triaxial NFW +++++++++++++++++++++++++++
+
+def pot_NFW_T(c, x, y, z, M, q, s):
+    x = x*units.kpc
+    y = y*units.kpc
+    z = z*units.kpc
+    r = np.sqrt(x**2 + y**2/q**2 + z**2/s**2)
+    Rvir = rvir(M, 0) # here we are working at z=0
+    a = Rvir / c
+    M = M * units.Msun
+    f = np.log(1.0 + Rvir/a) - (Rvir/a / (1.0 + Rvir/a))
+    phi = -G * M * np.log(1 + r/a) / (r * f)
+    return phi.value
+
+def dens_NFW_T(c, x, y, z, M, q, s):
+    x = x*units.kpc
+    y = y*units.kpc
+    z = z*units.kpc
+    r = np.sqrt(x**2 + y**2/q**2 + z**2/s**2)
+    Rvir = rvir(M, 0) # here we are working at z=0
+    a = Rvir / c
+    M = M * units.Msun
+    f = np.log(1.0 + Rvir/a) - (Rvir/a / (1.0 + Rvir/a))
+    rho = M / ((4.0 * np.pi * a**3.0 * f) * (r / a) * (1.0 + (r/a))**2.0)
+    return rho.value
+
+def dens_NFWnRvir_T(c, x, y, z, M, Rv, q, s):
+    x = x*units.kpc
+    y = y*units.kpc
+    z = z*units.kpc
+    r = np.sqrt(x**2 + y**2/q**2 + z**2/s**2)
+    Rvir = Rv * units.kpc# here we are working at z=0
+    a = Rvir / c
+    M = M * units.Msun
+    f = np.log(1.0 + Rvir/a) - (Rvir/a / (1.0 + Rvir/a))
+    rho = M / ((4.0 * np.pi * a**3.0 * f) * (r / a) * (1.0 + (r/a))**2.0)
+    rho = rho.to(units.Msun / units.kpc**3)
+    return rho.value
+
+
+def vc_NFW_T(c, x, y, z, M, q, s):
+    x = x*units.kpc
+    y = y*units.kpc
+    z = z*units.kpc
+    r = np.sqrt(x**2 + y**2/q**2 + z**2/s**2)
+    Rvir = rvir(M, 0) # here we are working at z=0
+    M = M * units.Msun
+    a = Rvir / c
+    f = np.log(1.0 + Rvir/a) - (Rvir/a / (1.0 + Rvir/a))
+    up = G * M * (np.log(1 + r/a) - r/(r+a)) / f
+    vc = np.sqrt(up / r)
+    vc = vc.to(units.km / units.s)
+    return vc.value
+
+def mass_NFW_T(c, x, y, z, M, q, s):
+    x = x*units.kpc
+    y = y*units.kpc
+    z = z*units.kpc
+    Rvir = rvir(M, 0) # here we are working at z=0
+    a = Rvir / c
+    M = M * units.Msun
+    r = np.sqrt(x**2 + y**2/q**2 + z**2/s**2)
+    f = np.log(1.0 + c) - (c / (1.0 + c))
+    mass = M * (np.log(1 + r/a) - r/(a+r)) / f
+    return mass.value
+
+def mass_NFWnRvir_T(c, x, y, z, M, Rv, q, s):
+    x = x*units.kpc
+    y = y*units.kpc
+    z = z*units.kpc
+    Rvir = Rv * units.kpc # here we are working at z=0
+    a = Rvir / c
+    M = M * units.Msun
+    r = np.sqrt(x**2 + y**2/q**2 + z**2/s**2)
+    f = np.log(1.0 + c) - (c / (1.0 + c))
+    mass = M * (np.log(1 + r/a) - r/(a+r)) / f
+    return mass.value
+
+def a_NFW_T(c, x, y, z, M, q, s):
+    x = x*units.kpc
+    y = y*units.kpc
+    z = z*units.kpc
+    #M = M * units.Msun
+    Rvir = rvir(M, 0) # here we are working at z=0
+    M = M * units.Msun
+    a = Rvir / c
+    r = np.sqrt(x**2 + y**2/q**2 + z**2/s**2)
+    f = np.log(1.0 + Rvir/a) - (Rvir/a / (1.0 + Rvir/a))
+    ax = G * M / r**2 * (r/(r+a) - np.log(1 + r/a)) * x / r / f
+    ay = G * M / r**2 * (r/(r+a) - np.log(1 + r/a)) * y / r / f
+    az = G * M / r**2 * (r/(r+a) - np.log(1 + r/a)) * z / r / f
+    ax = ax.to(units.kpc/units.Gyr**2)
+    ay = ay.to(units.kpc/units.Gyr**2)
+    az = az.to(units.kpc/units.Gyr**2)
+    return ax.value, ay.value, az.value
+
+
+def a_NFWnRvir_T(c, x, y, z, M, Rv, q, s):
+    x = x*units.kpc
+    y = y*units.kpc
+    z = z*units.kpc
+    Rvir = Rv * units.kpc
+    M = M * units.Msun
+    a = Rvir / c
+    r = np.sqrt(x**2 + y**2/q**2 + z**2/s**2)
+    f = np.log(1.0 + Rvir/a) - (Rvir/a / (1.0 + Rvir/a))
+    ax = G * M / r**2 * (r/(r+a) - np.log(1 + r/a)) * x / r / f
+    ay = G * M / r**2 * (r/(r+a) - np.log(1 + r/a)) * y / r / f
+    az = G * M / r**2 * (r/(r+a) - np.log(1 + r/a)) * z / r / f
+    ax = ax.to(units.kpc/units.Gyr**2)
+    ay = ay.to(units.kpc/units.Gyr**2)
+    az = az.to(units.kpc/units.Gyr**2)
+    return ax.value, ay.value, az.value
+
+
+#+++++++++++++++++++++++++++++++++++++++++++ Logarithmic Profile +++++++++++++++++++++++
+
