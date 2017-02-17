@@ -103,11 +103,11 @@ def acc_sat_helper(xyz, host_model, ac,
 
 
         elif (host_model[0] == 'NFW_T'):
-
-            #v_halo = host_model[1]
-            q = host_model[6]
-            s = host_model[7]
-            ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2],\
+            c_host = host_model[3]
+            Rvir_host = host_model[2]
+            q = host_model[4]
+            s = host_model[5]
+            ahalo = a_NFWnRvir_T(c_host, xyz[0], xyz[1], xyz[2],\
                                M_host, Rvir_host, q, s)
 
     Ax = ahalo[0]

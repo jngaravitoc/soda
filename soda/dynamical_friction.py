@@ -65,8 +65,8 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
         rho = dens_NFWnRvir(c, x, y, z, M1, Rv)
 
     elif ((host_model[0] == 'NFW_T') & (ac==0)):
-        q = host_model[6]
-        s = host_model[7]
+        q = host_model[4]
+        s = host_model[5]
         rho = dens_NFWnRvir_T(c, x, y, z, M1, Rv, q, s)
 
     elif ((host_model[0] == 'hernquist') & (ac==0)):
