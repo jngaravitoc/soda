@@ -100,6 +100,16 @@ def acc_sat_helper(xyz, host_model, ac,
             rs_host = host_model[2]
             ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
                                 M_host)
+
+
+        elif (host_model[0] == 'NFW_T'):
+
+            #v_halo = host_model[1]
+            q = host_model[6]
+            s = host_model[7]
+            ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2],\
+                               M_host, Rvir_host, q, s)
+
     Ax = ahalo[0]
     Ay = ahalo[1]
     Az = ahalo[2]
@@ -188,8 +198,6 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
         if dfric==1:
             c_host = host_model[3]
             a_dfx, a_dfy, a_dfz = df(xyz[0], xyz[1], xyz[2],\
-
-
                                      vxyz[0], vxyz[1], xyz[2],\
                                      M_host, M_sat, Rvir_host,\
                                      c_host, host_model, M_disk,\
