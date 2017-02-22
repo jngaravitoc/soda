@@ -261,7 +261,6 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         sat_model2 = satellite_model2
 
     conv_factor = 1.0227121650537077 # from km/s to Kpc/Gyr
-    print(dt)
 
     # h is the time step
     h = dt * direction
