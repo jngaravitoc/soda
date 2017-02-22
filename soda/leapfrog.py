@@ -261,6 +261,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
         sat_model2 = satellite_model2
 
     conv_factor = 1.0227121650537077 # from km/s to Kpc/Gyr
+    print(dt)
 
     # h is the time step
     h = dt * direction
@@ -623,7 +624,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                                    vy_sag=vy_sag,\
                                                                    vz_sag=vz_sag,\
                                                                    sat_model2=sat_model2)
-
+            del(sat_model2)
         if 'pos_sat2' in kwargs:
 
             return t, np.array([x_lmc, y_lmc, z_lmc]).T,\
@@ -650,6 +651,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                np.array([vx_lmc, vy_lmc, vz_lmc]).T/conv_factor, \
                np.array([x_mw, y_mw, z_mw]).T, \
                np.array([vx_mw,vy_mw,vz_mw]).T/conv_factor
+
 
 def integrate_sat_helper(time, n_points, x_mw, y_mw, z_mw, vx_mw, vy_mw,\
                          vz_mw, x_lmc, y_lmc, z_lmc, vx_lmc, vy_lmc,\
