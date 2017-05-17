@@ -86,11 +86,6 @@ def extract(dct, namespace=None):
 def integrate_mw(time, pos_p, vel_p, \
                  host_model, direction=1, dt=0.01, ac=0, **kwargs):
 
-# kwargs: pos_p, vel_p
-
-## to do: generalize to any MW potential, maybe without a disk or
-## with!
-
     """
     Orbit integrator of a test particle around a MW-like halo at
     [0,0,0]
@@ -116,7 +111,7 @@ def integrate_mw(time, pos_p, vel_p, \
     TO-DO:
     ------
     0. Generalize to any MW model!!
-    1. Generalize to N- test particles.
+    1. Generalize to N-test particles.
     2. Integrate with galpy/gala
     3. Used in arbitrary accelerations/SCF
     """
