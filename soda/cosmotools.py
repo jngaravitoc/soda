@@ -44,6 +44,15 @@ def rvir2(Mvir, z):
     rv = rv * units.kpc
     return rv
 
+
+def r200(M200):
+    M200 = M200 * units.Msun
+    Delta200 = 200
+    pcrit = rho_crit(z)
+    R200 = (3*Mvir / (4 * np.pi * Deltavir * pcrit * Omega0))**(1/3.)
+    R200 = Rvir.to(units.kpc)
+    return R200
+
 def concentration(Mvir):
    h = 0.7
    c = 9.60 * (Mvir * h/ 1E12)**(-0.075)
