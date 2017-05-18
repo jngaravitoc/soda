@@ -196,41 +196,62 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
     """
     Orbit integrator of satellites around a host halo with disk and
-    bulge.
+    bulge. At the moment it can integrate one or two satellites around
+    a host taking into account dynamical friction. It also can
+    integrate a test particle in that system.
 
     Input:
     ------
+
     time: Time of the integration in Gyrs
-    pos_sat: array with the initial cartesian position of the satellite.
-    vel_sat: array with the initial cartesian velocity of the satellite.
     pos_host: array with the initial cartesian position of the host.
     vel_host: array with the initial cartesian velocity of the host.
     host_model: array('NFW'/'hernquist', Mass 1E10, Rvir/r_s, concentration)
-    sat_model: array('NFW'/'hernquist'/'plummer', Mass 1E10, Rvir/rs, concentration)
     disk_params: array(Mass, a, b)
     bulge_params: array(Mass, r_s)
-    pos_p
-    vel_p
     ac (optional, default=0): No (0), Yes(1)
     dfric: Include dynamical friction No(0), default Yes(1)
     alpha: array(cl, alpha, L, C), cl=0 (), cl=1 (Van der Marel)
     host_move (optional, default=1): No(0), Yes(1)
     direction (optional, default=1): Forward -1, Backwards=1
     dt: Time step for the integration (default dt=0.01 Gyrs)
-    kwargs:
-    alpha2 a different df parameter for the LMC.
-    lmc
 
+    kwargs : 
+
+    satellite_model
+
+    pos_sat
+
+    vel_sat
+
+    satellite_model2
+
+    pos_sat2
+
+    vel_sat2
+
+    lmc_model : string
+        octopus internally have models for the LMC. you can choose
+        between: 'LMC1', 'LMC2', 'LMC3', 'LMC4', 'LMC5', 'LMC6' for 
+        details of the models see LMC_models  
+
+    pos_p : 
+
+    vel_p : 
+
+    alpha2 : dobule 
+            A different df parameter for the satellite.
     Output:
-    ------
+    -------
 
-    t:
-    pos_sat:
-    vel_sat:
-    pos_host:
-    vel_host:
-    pos_p
-    vel_p
+    t : float
+        Look back time of the orbit.
+    pos_sat : array
+    vel_sat : array 
+    pos_host : array 
+    vel_host : array 
+    pos_p : array 
+    vel_p : array 
 
     TO-DO:
     ------
@@ -618,6 +639,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                                    vy_sag=vy_sag,\
                                                                    vz_sag=vz_sag,\
                                                                    sat_model2=sat_model2)
+
             del(sat_model2)
         if 'pos_sat2' in kwargs:
 
