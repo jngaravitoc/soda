@@ -50,7 +50,7 @@ def r200(M200):
     M200 = M200 * units.Msun
     Delta200 = 200
     pcrit = rho_crit(z)
-    R200 = (3*M200 / (4 * np.pi * Delta200 * pcrit * Omega0))**(1/3.)
+    R200 = (3*M200 / (4 * np.pi * Delta200 * pcrit ))**(1/3.)
     R200 = R200.to(units.kpc)
     return R200
 
