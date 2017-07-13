@@ -4,7 +4,9 @@ from astropy import units, constants
 from .profiles import *
 #from adiabatic_contraction import rho_ac
 
+
 # Coulomb Logarithm definition:
+# See:
 def coulomb_log(r, alpha):
     bmax = r # position of test particle at a given time
     # k = softening length if the satellite is modeled with a plummer
@@ -18,6 +20,7 @@ def coulomb_log(r, alpha):
     CL = alpha * np.log(L)
     return CL
 
+
 # Coulomb Logarithm from Van Der Marel et al 2013. Eq A1
 def coulomb_v_log(L, r, alpha_v, a, C):
     l = np.log(r/(C*a))**alpha_v
@@ -26,7 +29,9 @@ def coulomb_v_log(L, r, alpha_v, a, C):
 
 
 #One dimensional velocidty dispersion analytic approx.
+
 #From Zentner and Bullock 2003 for a NFW profile!
+
 def sigma(c, r, M, Rv):
     M = M * units.Msun
     Rv = Rv * units.kpc

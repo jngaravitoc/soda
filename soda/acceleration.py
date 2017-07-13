@@ -32,20 +32,26 @@ def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
     point-like potential.
 
     """
-
+    # Reading kwargs
     extract(kwargs)
 
+    # satellite parameters:
     M_LMC = sat_model[1] * units.Msun
     r_to_LMC = np.sqrt(xyz_LMC[0]**2.0 + xyz_LMC[1]**2.0 + xyz_LMC[2]**2.0)
+
+    # Computing accelerations:
     Ax_LMC, Ay_LMC, Az_LMC = particle_acceleration(M_LMC, xyz_LMC, r_to_LMC)
     Ax_MW, Ay_MW, Az_MW = acc_sat_helper(xyz_MW, host_model, ac,
                                          disk_params=disk_params, bulge_params=bulge_params)
+
+    # If there are two satellites:
 
     if 'pos_sat2' in kwargs:
         M_sag = sat_model2[1]*units.Msun
         r_to_sag = np.sqrt(pos_sat2[0]**2.0 + pos_sat2[1]**2.0 + pos_sat2[2]**2.0)
         Ax_sag, Ay_sag, Az_sag = particle_acceleration(M_sag, pos_sat2, r_to_sag)
         return Ax_LMC + Ax_MW + Ax_sag, Ay_LMC + Ay_MW + Ay_sag, Az_LMC + Az_MW + Az_sag
+
     else:
         return Ax_LMC + Ax_MW, Ay_LMC + Ay_MW, Az_LMC + Az_MW
 
@@ -53,9 +59,10 @@ def particle_acceleration_LMC(xyz_LMC, xyz_MW, sat_model, host_model, \
 
 def particle_acceleration(Mtot, xyz, r):
     """
-    Newtonian acceleration between two bodies.
+    Computes the Newtonian acceleration between two bodies.
 
     """
+
     Ax = - G * Mtot * xyz[0] * units.kpc / (r*units.kpc)**3
     Ay = - G * Mtot * xyz[1] * units.kpc / (r*units.kpc)**3
     Az = - G * Mtot * xyz[2] * units.kpc / (r*units.kpc)**3
@@ -74,33 +81,41 @@ def acc_sat_helper(xyz, host_model, ac,
 
     extract(kwargs)
 
+    # checking if there is a disk or a bulge.
+
     if 'disk_params' in kwargs:
         M_disk, a_disk, b_disk = disk_params
 
     if 'bulge_params' in kwargs:
         M_bulge, rh = bulge_params
 
+    # Host halo mass.
+
     M_host = host_model[1]
 
-
+    # Adiabatic Contraction.
 
     if (ac == 1):
        print('No ac yet!')
        #ahalo = acc_ac(x, y, z)
 
     else:
+        # Computing accelerations from halo model.
+
+        # for NFW:
 
         if (host_model[0] == 'NFW'):
             Rvir_host = host_model[2]
             c_host = host_model[3]
             ahalo = a_NFWnRvir(c_host, xyz[0], xyz[1], xyz[2],\
                                M_host, Rvir_host)
+        # For Hernquist:
 
         elif (host_model[0] == 'hernquist'):
             rs_host = host_model[2]
             ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
                                 M_host)
-
+        # For triaxial NFW.
 
         elif (host_model[0] == 'NFW_T'):
             c_host = host_model[3]
@@ -115,6 +130,8 @@ def acc_sat_helper(xyz, host_model, ac,
     Az = ahalo[2]
 
 
+    # Computing accelerations for the disk and the bulge.
+
     if 'disk_params' in kwargs:
         adisk = a_mn(a_disk, b_disk, xyz[0], xyz[1], xyz[2], M_disk)
         Ax += adisk[0]
@@ -127,6 +144,7 @@ def acc_sat_helper(xyz, host_model, ac,
         Ay += abulge[1]
         Az += abulge[2]
 
+    # Acceleration in presence of a second satellite.
 
     if 'sat2' in kwargs:
         ax_s2, ay_s2, az_s2 = particle_acceleration(Msat2, xyzrs1rs2, rs1s2)
