@@ -33,9 +33,12 @@ def mass_plummer(a, r, M):
     Mass = M*r**3 / (a**2 + r**2)**(3/2.)
     return Mass.value
 
-def dens_plummer(a, r, M):
+def dens_plummer(a, x, y, z, M):
     M = M*units.Msun
-    r = r*units.kpc
+    x = x * units.kpc
+    y = y * units.kpc
+    z = z * units.kpc
+    r = np.sqrt(x**2 + y**2 + z**2)
     a = a*units.kpc
     rho = 3*M / (4 *np.pi * a**3) * (1 + r**2/a**2)**(-5/2)
     return rho.value

@@ -189,8 +189,8 @@ def integrate_mw(time, pos_p, vel_p, \
 
 
 def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
-                  bulge_params, ac=0, dfric=1, alpha=[0, 1], host_move=1,
-                  direction=1, dt=0.01, **kwargs):
+                  bulge_params, ac=0, dfric=1, alpha=[0, 1], host_move=1,\
+                  direction=1, dt=0.01, C=0, **kwargs):
 
 ## to do: generalize to any MW potential, maybe without a disk or
 
@@ -339,9 +339,9 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                             vy_mw[0], vz_mw[0])
 
 
-
+    print(C)
     ax_lmc[0], ay_lmc[0], az_lmc[0] = acc_sat(pos_hs0, vel_hs0, host_model, sat_model, \
-                                              disk_params, bulge_params, ac, dfric, alpha)
+                                              disk_params, bulge_params, ac, dfric, C ,alpha)
 
     ax_mw[0], ay_mw[0], az_mw[0] = acc_host(-pos_hs0, -vel_hs0, host_model, sat_model)
 
@@ -364,7 +364,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                   disk_params,\
                                                   bulge_params,\
                                                   ac, dfric,\
-                                                  alpha,\
+                                                  C, alpha,\
                                                   xyz2=-pos_ss0,\
                                                   sat2_model=sat_model2)
 
@@ -374,8 +374,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                   sat_model2,\
                                                   disk_params,\
                                                   bulge_params,\
-                                                  ac, dfric,\
-                                                  alpha2,\
+                                                  ac, C, alpha2,\
                                                   xyz2=pos_ss0,\
                                                   sat2_model= sat_model)
 
@@ -412,7 +411,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                               host_model,\
                                               sat_model,disk_params,\
                                               bulge_params, ac,\
-                                              dfric, alpha)
+                                              dfric, C, alpha)
     if 'pos_sat2' in kwargs:
 
         print('Satellite 2: ', x_sag[0], y_sag[0], z_sag[0])
@@ -465,7 +464,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                  host_model,\
                                                  sat_model,disk_params,\
                                                  bulge_params, ac,\
-                                                 dfric, alpha)
+                                                 dfric, C, alpha)
 
         if 'pos_sat2' in kwargs:
 
@@ -476,11 +475,11 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                       vy_mw[1], vz_mw[1])
 
             ax_lmc[1], ay_lmc[1], az_lmc[1] = acc_sat(pos_hs1, vel_hs1, host_model, sat_model,\
-                                                      disk_params, bulge_params, ac, dfric,\
+                                                      disk_params, bulge_params, ac, dfric, C,\
                                                       alpha, xyz2=-pos_ss1, sat2_model= sat_model2)
 
             ax_sag[1], ay_sag[1], az_sag[1] = acc_sat(pos_hs21, vel_hs21, host_model, sat_model2,\
-                                                      disk_params, bulge_params, ac, dfric,\
+                                                      disk_params, bulge_params, ac, dfric, C,\
                                                       alpha2, xyz2=pos_ss1, sat2_model= sat_model)
 
             ax_mw[1], ay_mw[1], az_mw[1] = acc_host(-pos_hs1, -vel_hs1, host_model, sat_model,\
@@ -509,7 +508,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
 
         ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
-                                                  disk_params, bulge_params, ac, dfric,\
+                                                  disk_params, bulge_params, ac, dfric, C,\
                                                   alpha)
         if 'pos_sat2' in kwargs:
 
@@ -533,11 +532,11 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
                                                     vy_lmc[i], vz_lmc[i])
 
             ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
-                                                      disk_params, bulge_params, ac, dfric,\
+                                                      disk_params, bulge_params, ac, dfric, C,\
                                                       alpha, xyz2=-pos_ssi, sat2_model=sat_model2)
 
             ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
-                                                      disk_params, bulge_params, ac, dfric,\
+                                                      disk_params, bulge_params, ac, dfric, C,\
                                                       alpha2, xyz2=pos_ssi, sat2_model=sat_model)
         if (host_move==1):
             x_mw[i] = x_mw[i-2] - 2 * h * vx_mw[i-1]
@@ -557,7 +556,7 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
             ax_mw[i], ay_mw[i], az_mw[i] = acc_host(-pos_hsi, -vel_hsi, host_model, sat_model)
 
             ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
-                                                      disk_params, bulge_params, ac, dfric,\
+                                                      disk_params, bulge_params, ac, dfric, C,\
                                                       alpha)
 
             if 'pos_sat2' in kwargs:
@@ -571,11 +570,11 @@ def integrate_sat(time, pos_host, vel_host, host_model, disk_params,\
 
                 ax_lmc[i], ay_lmc[i], az_lmc[i] = acc_sat(pos_hsi, vel_hsi, host_model, sat_model,\
                                                           disk_params, bulge_params, ac, dfric,\
-                                                          alpha, xyz2=-pos_ssi, sat2_model=sat_model2)
+                                                          C,alpha, xyz2=-pos_ssi, sat2_model=sat_model2)
 
                 ax_sag[i], ay_sag[i], az_sag[i] = acc_sat(pos_hs2i, vel_hs2i, host_model, sat_model2,\
                                                           disk_params, bulge_params, ac, dfric,\
-                                                          alpha2,\
+                                                          C, alpha2,\
                                                           xyz2=pos_ssi,\
                                                           sat2_model=sat_model)
 

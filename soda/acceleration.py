@@ -115,6 +115,12 @@ def acc_sat_helper(xyz, host_model, ac,
             rs_host = host_model[2]
             ahalo = a_hernquist(rs_host, xyz[0], xyz[1], xyz[2],\
                                 M_host)
+
+        elif (host_model[0] == 'plummer'):
+            rs_host = host_model[2]
+            ahalo = a_plummer(rs_host, xyz[0], xyz[1], xyz[2],\
+                                M_host)
+
         # For triaxial NFW.
 
         elif (host_model[0] == 'NFW_T'):
@@ -156,7 +162,7 @@ def acc_sat_helper(xyz, host_model, ac,
 
 #Function that computes the satellite acceleration
 def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
-            bulge_params, ac, dfric, alpha=False, **kwargs):
+            bulge_params, ac, dfric, C, alpha=False, **kwargs):
     """
     Function that computes the satellite acceleration
     due to it's host galaxy.
@@ -219,7 +225,7 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
                                      vxyz[0], vxyz[1], xyz[2],\
                                      M_host, M_sat, Rvir_host,\
                                      c_host, host_model, M_disk,\
-                                     M_bulge, ac, alpha)
+                                     M_bulge, ac, alpha, C)
             Ax+=a_dfx
             Ay+=a_dfy
             Az+=a_dfz

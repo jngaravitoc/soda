@@ -3,7 +3,7 @@ from scipy.special import erf
 from astropy import units, constants
 from .profiles import *
 #from adiabatic_contraction import rho_ac
-
+from scipy.integrate import quad
 
 # Coulomb Logarithm definition:
 # See:
@@ -20,8 +20,34 @@ def coulomb_log(r, alpha):
     CL = alpha * np.log(L)
     return CL
 
+def coulomb_tremaine_cdm(r, v, M_sat, alpha):
+    # See https://arxiv.org/abs/1610.08297
+    r = r*units.kpc
+    G1 = G.to(units.kpc**3 / units.Msun / units.Gyr**2)
+    #print(2*v**2*r/(G1*M_sat))
+    CL = alpha * np.log((2*v**2*r/(G1*M_sat)).value)
+    return CL
 
-# Coulomb Logarithm from Van Der Marel et al 2013. Eq A1
+def integrand(t):
+    y= (1-np.cos(t))/t
+    return y
+
+def coulomb_tremaine_uldm(r, v, M_sat, alpha, M_scalar):
+    # See https://arxiv.org/abs/1610.08297
+    #M_scalar = 1E-22 * units.eV
+    M_scalar = M_scalar * units.eV
+    hbarc2 = 1.9199E-18 * units.eV * units.km * units.kpc / units.s
+    k1 = M_scalar * v / (hbarc2)
+    k1 = k1.to(1/units.kpc)
+
+    cin = quad(integrand, 0, (2*k1*r).value)
+    #print(cin)
+    #print(2*k1*r)
+    CL = cin[0] + (np.sin((2*k1*r).value)/(2*k1*r).value) - 1
+
+    return CL
+
+# Coulomb Logarithm from Van Der Marel et al 2013. Eq A
 def coulomb_v_log(L, r, alpha_v, a, C):
     l = np.log(r/(C*a))**alpha_v
     x = [l, L]
@@ -45,10 +71,34 @@ def sigma(c, r, M, Rv):
 
 # Dynamical Friction computation
 def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
-       M_bulge, ac, alpha):
+       M_bulge, ac, alpha, C):
     """
     Function that computes the dynamical friction
     of a satellite around the host halo.
+
+    parameters:
+
+    x, y, z:
+
+    vx, vy, vz
+
+    M1, M2
+
+    Rv
+
+    c
+
+    host_model
+
+    M_disk
+
+    M_bulge
+
+    ac
+
+    alpha
+
+    C : Lambda = bmax/bmin (0), Tremaine CDM (1), Tremaine Ultralight Scalar (2).
 
     """
 
@@ -59,7 +109,7 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
 
     # Velocities
     v = np.sqrt(vx**2.0 + vy**2.0 + vz**2.0)
-    v = v * units.kpc / units.Gyr  # is it?
+    v = v * units.kpc / units.Gyr
 
     # Density of the host galaxy at r
     if (ac==1):
@@ -77,6 +127,9 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
     elif ((host_model[0] == 'hernquist') & (ac==0)):
         rho = dens_hernquist(Rv, x, y, z, M1) # Rv is a in this case
 
+    elif ((host_model[0] == 'plummer') & (ac==0)):
+        rho = dens_plummer(Rv, x, y, z, M1) # Rv is a in this case
+
     rho = rho * units.Msun / units.kpc**3.0
 
     # Computing the dynamical friction
@@ -91,7 +144,18 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
     M1 = M1 * units.Msun
 
     if (alpha[0]==0):
-         Coulomb = coulomb_log(r, alpha[1])
+
+         if C==0: # Regular dm LAMBDA = bmax/bmin
+             Coulomb = coulomb_log(r, alpha[1])
+
+         elif C==1: # Tremaine regular DM.
+             Coulomb = coulomb_tremaine_cdm(r, v, M2, alpha[1])
+
+
+         elif C==2: # Tremaine ultraligh scalar.
+             Coulomb = coulomb_tremaine_uldm(r, v, M2, alpha[1], alpha[2])
+
+
     elif (alpha[0]==1):
          L = alpha[2]
          C = alpha[3]
@@ -99,18 +163,26 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
 
     if host_model[0]=='hernquist':
         s = sigma(c, r, M1.value - M_disk - M_bulge, Rv*c)
+    elif host_model[0]=='plummer':
+        s = sigma(c, r, M1.value - M_disk - M_bulge, Rv*c)
     else:
         s = sigma(c, r, M1.value - M_disk - M_bulge, Rv)
     X = v/(np.sqrt(2.0)*s)
 
     # Dynamical friction equation
 
-    a_dfx = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
-             *np.exp(-X**2.0))*vx)/v**3.0
-    a_dfy = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
-             *np.exp(-X**2.0))*vy)/v**3.0
-    a_dfz = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
-             *np.exp(-X**2.0))*vz)/v**3.0
+    if C==0:
+        a_dfx = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
+                 *np.exp(-X**2.0))*vx)/v**3.0
+        a_dfy = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
+                 *np.exp(-X**2.0))*vy)/v**3.0
+        a_dfz = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
+                 *np.exp(-X**2.0))*vz)/v**3.0
+
+    if ((C==1) | (C==2)):
+        a_dfx = (forpiG2*M2*rho*Coulomb)*vx/v**3.0
+        a_dfy = (forpiG2*M2*rho*Coulomb)*vy/v**3.0
+        a_dfz = (forpiG2*M2*rho*Coulomb)*vz/v**3.0
 
     # Units conversion
     a_dfx = a_dfx.to(units.kpc / units.Gyr**2.0)
