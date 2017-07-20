@@ -22,6 +22,8 @@ def coulomb_log(r, alpha):
 
 def coulomb_tremaine_cdm(r, v, M_sat, alpha):
     # See https://arxiv.org/abs/1610.08297
+    # Ultraligh scalar DM dynamical friction fudge term quantum mechanics -> classical approx.
+
     r = r*units.kpc
     G1 = G.to(units.kpc**3 / units.Msun / units.Gyr**2)
     #print(2*v**2*r/(G1*M_sat))
@@ -29,22 +31,23 @@ def coulomb_tremaine_cdm(r, v, M_sat, alpha):
     return np.float32(CL)
 
 def integrand(t):
+    # integral -> This can be done analytically! 
     y= (1-np.cos(t))/t
     return y
 
 def coulomb_tremaine_uldm(r, v, M_sat, alpha, M_scalar):
+    # Ultraligh scalar DM dynamical friction fudge term quantum mechanics.
+    
     # See https://arxiv.org/abs/1610.08297
     #M_scalar = 1E-22 * units.eV
+    
     M_scalar = M_scalar * units.eV
     hbarc2 = 1.9199E-18 * units.eV * units.km * units.kpc / units.s
     k1 = M_scalar * v / (hbarc2)
     k1 = k1.to(1/units.kpc)
 
     cin = quad(integrand, 0, (2*k1*r).value)
-    #print(cin)
-    #print(2*k1*r)
     CL = cin[0] + (np.sin((2*k1*r).value)/(2*k1*r).value) - 1
-
     return alpha*CL
 
 # Coulomb Logarithm from Van Der Marel et al 2013. Eq A
@@ -111,28 +114,30 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
     v = np.sqrt(vx**2.0 + vy**2.0 + vz**2.0)
     v = v * units.kpc / units.Gyr
 
-    # Density of the host galaxy at r
+    # Computing the density of the host galaxy at r
+    
+    ## With adiabatic contraction.
     if (ac==1):
         rho = rho_ac(r) # using the adiabatic contraction interpolated density
         #rho = dens_NFWnRvir(c, x, y, z, M1, Rv)
-
+    # NFW 
     elif ((host_model[0] == 'NFW') & (ac==0)):
         rho = dens_NFWnRvir(c, x, y, z, M1, Rv)
-
+    # triaxial NFW
     elif ((host_model[0] == 'NFW_T') & (ac==0)):
         q = host_model[4]
         s = host_model[5]
         rho = dens_NFWnRvir_T(c, x, y, z, M1, Rv, q, s)
-
+    # Hernquist
     elif ((host_model[0] == 'hernquist') & (ac==0)):
         rho = dens_hernquist(Rv, x, y, z, M1) # Rv is a in this case
-
+    # plummer
     elif ((host_model[0] == 'plummer') & (ac==0)):
         rho = dens_plummer(Rv, x, y, z, M1) # Rv is a in this case
 
     rho = rho * units.Msun / units.kpc**3.0
 
-    # Computing the dynamical friction
+    # Constants
     forpiG2 = - 4.0 * np.pi * G**2.0
     forpiG2 = forpiG2.to(units.kpc**6.0 / units.Msun**2.0 / units.Gyr**4.0)
 
@@ -142,7 +147,8 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
     vz = vz * units.kpc / units.Gyr
     M2 = M2 * units.Msun
     M1 = M1 * units.Msun
-
+    
+    # fudge factor in dynamical friction
     if (alpha[0]==0):
 
          if C==0: # Regular dm LAMBDA = bmax/bmin
@@ -155,12 +161,14 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
          elif C==2: # Tremaine ultraligh scalar.
              Coulomb = coulomb_tremaine_uldm(r, v, M2, alpha[1], alpha[2])
 
-
+    # Van Der Marel dynamical friction fudge factor.
     elif (alpha[0]==1):
          L = alpha[2]
          C = alpha[3]
          Coulomb = coulomb_v_log(L, r, alpha[1], rs_sat ,C)
 
+    # sigma term
+            
     if host_model[0]=='hernquist':
         s = sigma(c, r, M1.value - M_disk - M_bulge, Rv*c)
     elif host_model[0]=='plummer':
@@ -169,8 +177,8 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
         s = sigma(c, r, M1.value - M_disk - M_bulge, Rv)
     X = v/(np.sqrt(2.0)*s)
 
-    # Dynamical friction equation
-
+    # Dynamical friction acceleration terms:
+    # Usual with error function.
     if C==0:
         a_dfx = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
                  *np.exp(-X**2.0))*vx)/v**3.0
@@ -179,6 +187,7 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
         a_dfz = (forpiG2*M2*rho*Coulomb*(erf(X.value) - 2.0*X/(np.sqrt(np.pi))\
                  *np.exp(-X**2.0))*vz)/v**3.0
 
+    # Quantum formulation:
     if ((C==1) | (C==2)):
         a_dfx = (forpiG2*M2*rho*Coulomb)*vx/v**3.0
         a_dfy = (forpiG2*M2*rho*Coulomb)*vy/v**3.0
