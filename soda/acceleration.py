@@ -210,7 +210,7 @@ def acc_sat(xyz, vxyz, host_model, sat_model, disk_params, \
 
     # Acceleration by the DM halo profile
 
-    if ((r<=Rvir_host) & (dfric==1)):
+    if (r<=Rvir_host):
 
         Ax, Ay, Az = acc_sat_helper(xyz, host_model, ac, disk_params=disk_params,\
                                     bulge_params=bulge_params)

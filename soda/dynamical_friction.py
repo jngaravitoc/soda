@@ -26,7 +26,7 @@ def coulomb_tremaine_cdm(r, v, M_sat, alpha):
     G1 = G.to(units.kpc**3 / units.Msun / units.Gyr**2)
     #print(2*v**2*r/(G1*M_sat))
     CL = alpha * np.log((2*v**2*r/(G1*M_sat)).value)
-    return CL
+    return np.float32(CL)
 
 def integrand(t):
     y= (1-np.cos(t))/t
@@ -45,7 +45,7 @@ def coulomb_tremaine_uldm(r, v, M_sat, alpha, M_scalar):
     #print(2*k1*r)
     CL = cin[0] + (np.sin((2*k1*r).value)/(2*k1*r).value) - 1
 
-    return CL
+    return alpha*CL
 
 # Coulomb Logarithm from Van Der Marel et al 2013. Eq A
 def coulomb_v_log(L, r, alpha_v, a, C):
@@ -150,7 +150,7 @@ def df(x, y, z, vx, vy, vz, M1, M2, Rv, c, host_model, M_disk, \
 
          elif C==1: # Tremaine regular DM.
              Coulomb = coulomb_tremaine_cdm(r, v, M2, alpha[1])
-
+             print(alpha[1], Coulomb)
 
          elif C==2: # Tremaine ultraligh scalar.
              Coulomb = coulomb_tremaine_uldm(r, v, M2, alpha[1], alpha[2])
